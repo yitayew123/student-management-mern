@@ -1,0 +1,1043 @@
+/* =========================================================
+   APPLICATION SHELL
+   ========================================================= */
+
+/**
+ * Top-level layout wrapper.
+ *
+ * `isolation: isolate` creates a new stacking context at the
+ * app-shell level. This confines z-index values declared inside
+ * (sidebar: 100, overlay: 90, header: 50) to this subtree — so
+ * a modal from a page *inside* the shell can layer above the
+ * sidebar without needing z-index 101+.
+ *
+ * `100vh` (not `100dvh`) is used deliberately here — it's fine
+ * for the *minimum* height (the shell always fills the viewport
+ * as a floor), but see the mobile override note about
+ * `100dvh` for the content area.
+ */
+.app-shell {
+  min-height: 100vh;
+  isolation: isolate;
+  background: var(--color-canvas);
+}
+
+/**
+ * Fixed sidebar — always visible on desktop, off-canvas on mobile.
+ *
+ * Positioning:
+ *   `position: fixed` + `inset: 0 auto 0 0` → full height, left edge
+ *   `z-index: 100` → above the header (50) and overlay (90)
+ *
+ * Scrolling:
+ *   `overflow-y: auto` + `overscroll-behavior: contain` → the
+ *   sidebar scrolls internally when its content exceeds viewport,
+ *   WITHOUT chaining to the page. On mobile this matters: you can
+ *   scroll the nav without also scrolling the page behind it.
+ *   Custom scrollbar styling (thin, gray) below.
+ *
+ * ⚠️ A11Y (already handled): on mobile the closed state uses
+ * `visibility: hidden`, which removes the sidebar from BOTH the
+ * focus order and the accessibility tree. That's the correct
+ * fix for the "keyboard user tabs into invisible drawer" bug I
+ * flagged in the AppSidebar review — no JS changes needed.
+ */
+.app-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 100;
+
+  display: flex;
+  flex-direction: column;
+
+  width: var(--sidebar-width);
+  padding: 22px 15px 16px;
+
+  color: var(--color-text-inverse);
+  /* Radial highlight at the top-left creates depth — the sidebar
+     looks like a lit surface rather than a flat rectangle.
+     `rgb(59 130 246 / 0.12)` is --color-brand-500 at 12% alpha. */
+  background:
+    radial-gradient(circle at 0% 0%, rgb(59 130 246 / 0.12), transparent 35%),
+    var(--color-sidebar);
+
+  border-right: 1px solid rgb(255 255 255 / 0.06);
+
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #374151 transparent;
+}
+
+/* Webkit scrollbar styling (Chrome/Safari/Edge) — Firefox uses
+   the `scrollbar-width` + `scrollbar-color` properties above. */
+.app-sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.app-sidebar::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 999px;
+}
+
+/* =========================================================
+   SIDEBAR BRAND
+   ========================================================= */
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  min-height: 60px;
+  padding: 0 7px 23px;
+
+  border-bottom: 1px solid rgb(255 255 255 / 0.09);
+}
+
+/* Logo mark — gradient background + inner highlight + drop
+   shadow. The `inset` shadow (`0 1px 0 rgb(255 255 255 / 0.2)`)
+   simulates a top-edge light source, giving the tile a subtle
+   3D feel. Matches modern app-brand icon treatment. */
+.brand-mark {
+  position: relative;
+
+  display: grid;
+  place-items: center;
+
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+
+  color: #ffffff;
+  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+
+  border: 1px solid rgb(255 255 255 / 0.16);
+  border-radius: 14px;
+
+  box-shadow:
+    0 5px 18px rgb(59 130 246 / 0.25),
+    inset 0 1px 0 rgb(255 255 255 / 0.2);
+}
+
+/* Shared "text column" pattern — used by both brand-copy (top)
+   and profile-copy (header). Both need ellipsis truncation on
+   overflow, hence the shared rule. */
+.brand-copy,
+.profile-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* enables ellipsis on flex children */
+}
+
+.brand-copy strong {
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 750; /* between semibold (700) and extrabold (800) */
+  letter-spacing: -0.035em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.brand-copy span {
+  margin-top: 4px;
+  overflow: hidden;
+  color: #9ca3af;
+  font-size: 0.71rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   SIDEBAR NAVIGATION
+   ========================================================= */
+
+.sidebar-section {
+  padding: 25px 10px 13px;
+}
+
+.sidebar-caption {
+  color: #9ca3af;
+  font-size: 0.65rem;
+  font-weight: 750;
+  letter-spacing: 0.15em; /* wide tracking — eyebrow label style */
+}
+
+.sidebar-navigation {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.nav-group {
+  min-width: 0;
+}
+
+.nav-group-label {
+  margin: 0 0 10px 10px;
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 550;
+}
+
+/**
+ * Individual navigation link — behaves like a button.
+ *
+ * Layout: icon + label + optional chevron (chevron uses
+ * `margin-left: auto` to push to the right edge).
+ *
+ * Touch target: min-height 46px — above the 44px WCAG minimum.
+ * Good for mobile taps.
+ */
+.nav-link {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  min-height: 46px;
+  margin: 4px 0;
+  padding: 0 12px;
+
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none;
+
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+
+  transition:
+    background 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.nav-link > svg {
+  flex-shrink: 0;
+  opacity: 0.9;
+  transition: transform 160ms ease;
+}
+
+.nav-link > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  color: #ffffff;
+  background: rgb(255 255 255 / 0.07);
+  border-color: rgb(255 255 255 / 0.04);
+}
+
+/* Subtle 1px slide-right on icon hover — reads as
+   "this link reacts to you" without being distracting. */
+.nav-link:hover > svg {
+  transform: translateX(1px);
+}
+
+/**
+ * Active route — gradient background + glow.
+ *
+ * ⚠️ ADDED: `background: rgb(37 99 235);` — a flat fallback
+ * BEFORE the gradient. If a future browser/engine ever fails
+ * to parse `linear-gradient` (rare but possible with feature-
+ * flag stripping, embedded webviews, or forced-colors mode),
+ * the active state would render with NO background — the
+ * highlighted nav item would become invisible (white text on
+ * the dark sidebar = almost no contrast distinction from
+ * inactive items).
+ *
+ * The fallback is the gradient's starting color, so the visual
+ * difference only appears in browsers that can't render
+ * gradients — for everyone else, the gradient wins.
+ */
+.nav-link--active {
+  color: #ffffff;
+  background: rgb(37 99 235); /* fallback */
+  background: linear-gradient(
+    105deg,
+    rgb(37 99 235 / 0.95),
+    rgb(59 130 246 / 0.85)
+  );
+  border-color: rgb(147 197 253 / 0.2);
+
+  box-shadow:
+    0 5px 15px rgb(37 99 235 / 0.2),
+    inset 0 1px 0 rgb(255 255 255 / 0.1);
+}
+
+.nav-link--active > svg {
+  opacity: 1;
+}
+
+/**
+ * Focus state for nav links — override the global
+ * `:focus-visible { box-shadow: var(--focus-ring); }` because
+ * the focus ring (blue glow) is invisible against the dark
+ * sidebar. Instead, use a bright outline (#93c5fd — light blue)
+ * which contrasts well on both the dark inactive background AND
+ * the active gradient.
+ *
+ * `box-shadow: none` cancels the global rule so we don't get
+ * both the outline AND the global box-shadow firing on the same
+ * element.
+ */
+.nav-link:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+.nav-chevron {
+  flex-shrink: 0;
+  margin-left: auto;
+  opacity: 0.8;
+}
+
+/* =========================================================
+   SIDEBAR FOOTER
+   ========================================================= */
+
+.sidebar-footer {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+
+  margin-top: auto; /* pushes to bottom of flex column */
+  padding: 17px 7px 4px;
+
+  border-top: 1px solid rgb(255 255 255 / 0.09);
+}
+
+.sidebar-footer-icon {
+  display: grid;
+  place-items: center;
+
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+
+  color: #bfdbfe;
+  background: linear-gradient(145deg, #1e3a5f, #1e293b);
+
+  border: 1px solid rgb(147 197 253 / 0.12);
+  border-radius: 12px;
+}
+
+.sidebar-footer strong,
+.sidebar-footer span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-footer strong {
+  color: #f8fafc;
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.sidebar-footer span {
+  margin-top: 4px;
+  color: #9ca3af;
+  font-size: 0.68rem;
+}
+
+/**
+ * Sidebar close button — hidden by default (desktop), shown on
+ * mobile only.
+ *
+ * ⚠️ The `!important` is technically avoidable with a more
+ * specific selector like `.sidebar-brand .sidebar-close { ... }`,
+ * but keeping it here is pragmatic — it makes the intent
+ * ("hide unconditionally, unless overridden") unmistakable and
+ * avoids specificity wars with `.icon-button { display:
+ * inline-grid }`. Not a bug; a defensive choice. Leave as-is
+ * unless refactoring the whole file.
+ */
+.sidebar-close {
+  display: none !important;
+  margin-left: auto;
+}
+
+/* =========================================================
+   MAIN CONTENT AREA
+   ========================================================= */
+
+/**
+ * Main column — offset from the sidebar.
+ *
+ * `margin-left: var(--sidebar-width)` keeps the content aligned
+ * to the sidebar's right edge. On mobile (below 760px) the
+ * sidebar is off-canvas, so the override `margin-left: 0` in the
+ * mobile media query removes the offset.
+ *
+ * `min-width: 0` prevents flex/grid children from overflowing
+ * the container — the classic "wide table pushes layout beyond
+ * viewport" bug.
+ */
+.app-main {
+  min-width: 0;
+  min-height: 100vh;
+  margin-left: var(--sidebar-width);
+}
+
+/**
+ * Content region — where routed pages render.
+ *
+ * ⚠️ NOTE (not a fix): the `content-appear` animation fires on
+ * MOUNT of the `.app-content` element. Because React keeps the
+ * same `<main>` node mounted across route changes (via
+ * `<Outlet />`), the animation plays only on FIRST page load,
+ * not on navigation. If you want a fade-in on every route
+ * change, wrap the `<Outlet />` in a keyed element:
+ *
+ *   <main className="app-content" id="main-content" tabIndex={-1}>
+ *     <div key={location.pathname} className="route-fade">
+ *       <Outlet />
+ *     </div>
+ *   </main>
+ *
+ * …and add `.route-fade { animation: content-appear 250ms ease-out; }`.
+ * Currently the animation is "first paint only" — which is a
+ * perfectly valid choice (initial load feels intentional, but
+ * navigation is instant), just worth knowing it doesn't
+ * actually fire on route changes.
+ *
+ * Hardcoded `60px` approximates the footer height. If the
+ * footer ever grows, this calc drifts. Minor — no fix needed
+ * unless footer content becomes dynamic.
+ */
+.app-content {
+  width: 100%;
+  max-width: var(--content-max-width);
+  min-height: calc(100vh - var(--header-height) - 60px);
+
+  margin: 0 auto;
+  padding: 34px;
+
+  animation: content-appear 250ms ease-out;
+}
+
+@keyframes content-appear {
+  from {
+    opacity: 0.75;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================================================
+   STICKY HEADER
+   ========================================================= */
+
+/**
+ * Sticky top bar.
+ *
+ * `position: sticky; top: 0` — sticks to the viewport top when
+ * scrolling (works because no ancestor has `overflow: hidden`).
+ *
+ * `backdrop-filter: blur(16px)` — frosted-glass effect. Requires
+ * `background: rgb(... / 0.94)` (semi-transparent) for the blur
+ * to be visible beneath; opaque backgrounds hide the effect.
+ * Both `backdrop-filter` and `-webkit-backdrop-filter` are
+ * included for Safari support.
+ *
+ * `z-index: 50` — below sidebar (100) and overlay (90). This
+ * means on mobile, opening the drawer puts the header BEHIND
+ * the dimmed overlay (correct — the drawer visually dominates).
+ */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  height: var(--header-height);
+  padding: 0 34px;
+
+  background: rgb(255 255 255 / 0.94);
+  border-bottom: 1px solid var(--color-border);
+
+  box-shadow: 0 2px 8px rgb(15 23 42 / 0.025);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.header-left,
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  min-width: 0;
+}
+
+.header-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.header-eyebrow {
+  color: var(--color-text-muted);
+  font-size: 0.64rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+}
+
+.header-context {
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: 0.85rem;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   HEADER ICON BUTTONS
+   ========================================================= */
+
+/**
+ * Square icon button — used by mobile menu, search, bell,
+ * sidebar close. 40×40px.
+ *
+ * ⚠️ A11Y NOTE (not fixed): WCAG 2.5.5 recommends 44×44px
+ * minimum for touch targets. This is 40×40 — slightly under.
+ * On desktop (mouse) this is fine; on mobile, the header hides
+ * search and shows only menu + bell + profile (all 36–40px).
+ * Close enough that most users won't notice, but if you ever
+ * get complaints about "hard to tap the bell," bump this to
+ * 44×44.
+ */
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  padding: 0;
+
+  color: var(--color-text-secondary);
+  background: transparent;
+
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+
+  transition:
+    color 150ms ease,
+    background 150ms ease,
+    border-color 150ms ease;
+}
+
+.icon-button:hover {
+  color: var(--color-brand-700);
+  background: var(--color-brand-50);
+  border-color: var(--color-brand-100);
+}
+
+.icon-button:focus-visible {
+  outline: 2px solid var(--color-brand-600);
+  outline-offset: 2px;
+}
+
+/* Hidden on desktop — visible on mobile only (see media query). */
+.mobile-menu-button {
+  display: none;
+}
+
+.header-divider {
+  width: 1px;
+  height: 34px;
+  flex-shrink: 0;
+  background: var(--color-border);
+}
+
+/* =========================================================
+   USER PROFILE
+   ========================================================= */
+
+.profile-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  min-width: 0;
+  padding: 5px 0 5px 5px;
+
+  color: var(--color-text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+
+  text-align: left;
+  cursor: pointer;
+
+  transition: background 150ms ease;
+}
+
+.profile-button:hover {
+  background: var(--color-surface-muted);
+}
+
+.profile-button:focus-visible {
+  outline: 2px solid var(--color-brand-600);
+  outline-offset: 3px;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+
+  width: 39px;
+  height: 39px;
+  flex-shrink: 0;
+
+  color: #1d4ed8;
+  background: linear-gradient(145deg, #dbeafe, #eff6ff);
+
+  border: 1px solid #bfdbfe;
+  border-radius: 50%;
+
+  font-size: 0.77rem;
+  font-weight: 800;
+}
+
+.profile-copy strong {
+  color: var(--color-text);
+  font-size: 0.79rem;
+  font-weight: 650;
+}
+
+.profile-copy small {
+  margin-top: 3px;
+  color: var(--color-text-secondary);
+  font-size: 0.68rem;
+}
+
+/* =========================================================
+   APPLICATION FOOTER
+   ========================================================= */
+
+.app-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  padding: 18px 34px;
+
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+
+  font-size: 0.74rem;
+  line-height: 1.6;
+}
+
+/* Base state: hidden. Only rendered visibly when the parent
+   passes `open=true` (see the JSX conditional). The CSS just
+   ensures that IF somehow rendered, it doesn't take space when
+   it shouldn't. */
+.sidebar-overlay {
+  display: none;
+}
+
+/* =========================================================
+   TABLET RESPONSIVENESS
+   ========================================================= */
+
+@media (max-width: 1100px) {
+  /* Narrower sidebar on tablet. The `--sidebar-width` variable
+     is also used by `.app-main { margin-left: ... }`, so this
+     change automatically keeps the content offset in sync. */
+  :root {
+    --sidebar-width: 230px;
+  }
+
+  .app-sidebar {
+    padding-inline: 12px;
+  }
+
+  .app-header {
+    padding-inline: 24px;
+  }
+
+  .app-content {
+    padding: 27px 24px;
+  }
+
+  .header-left,
+  .header-actions {
+    gap: 10px;
+  }
+}
+
+/* =========================================================
+   MOBILE NAVIGATION DRAWER
+   ========================================================= */
+
+@media (max-width: 760px) {
+  /**
+   * Off-canvas drawer — slides in from the left.
+   *
+   * `visibility: hidden` on the closed state is the KEY a11y
+   * fix: it removes the sidebar from BOTH the accessibility
+   * tree AND the keyboard focus order. Combined with
+   * `transform: translateX(-105%)` (visual hide), it's the
+   * complete correct pattern.
+   *
+   * The `visibility 220ms ease` in the transition list is
+   * asymmetric — CSS applies `visibility: visible` immediately
+   * when opening, but waits the full duration before applying
+   * `hidden` when closing. That gives the slide-out animation
+   * time to complete before the element disappears. Standard
+   * technique; don't remove the visibility transition.
+   *
+   * ⚠️ NOTE: `100vh` on mobile has the "address bar jumps"
+   * issue (viewport height changes as the bar hides/shows).
+   * Not fixed here because it's a polish issue — the sidebar
+   * uses `inset: 0 auto 0 0` (top/bottom anchored) rather than
+   * `100vh`, so it's already immune. Only `.app-content`'s
+   * min-height uses `100vh` (via calc), which could drift by
+   * ~60px on mobile. Fixing would require `100dvh` — deferred
+   * since the visual impact is minor.
+   */
+  .app-sidebar {
+    width: min(290px, 86vw);
+    padding: 20px 14px 16px;
+
+    transform: translateX(-105%);
+    visibility: hidden;
+    box-shadow: none;
+
+    transition:
+      transform 220ms ease,
+      visibility 220ms ease,
+      box-shadow 220ms ease;
+  }
+
+  .app-sidebar--open {
+    transform: translateX(0);
+    visibility: visible;
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Restore the close button — hidden by default on desktop
+     (see `.sidebar-close { display: none }` above). The
+     `!important` matches the base rule's `!important` so the
+     specificity is symmetric. */
+  .sidebar-close {
+    display: inline-grid !important;
+    color: #e2e8f0;
+  }
+
+  /**
+   * Overlay — dims the page behind the drawer.
+   *
+   * z-index 90 is between header (50) and sidebar (100), so
+   * the overlay dims the header but the drawer floats above it.
+   * Correct hierarchy.
+   *
+   * ⚠️ ANIMATION NOTE (not a fix): `overlay-appear` fires on
+   * MOUNT only. Because the JSX does `{open && <button>}`, the
+   * overlay unmounts instantly on close — so there's a
+   * fade-IN on open, but the overlay vanishes INSTANTLY on
+   * close while the sidebar slides out (220ms). Visually
+   * slightly off; the "correct" fix is a controlled
+   * mount/unmount with an exit animation. Not worth the
+   * complexity for a polish issue — current behavior is
+   * acceptable.
+   */
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+
+    background: rgb(15 23 42 / 0.5);
+    border: 0;
+
+    animation: overlay-appear 180ms ease-out;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  @keyframes overlay-appear {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Content area is full width on mobile — sidebar is
+     off-canvas, so no offset needed. */
+  .app-main {
+    margin-left: 0;
+  }
+
+  /* Show the hamburger. */
+  .mobile-menu-button {
+    display: inline-grid;
+  }
+
+  .app-header {
+    height: 66px;
+    padding-inline: 15px;
+    gap: 10px;
+  }
+
+  .header-left,
+  .header-actions {
+    gap: 7px;
+  }
+
+  /**
+   * Mobile header simplification — hide non-essential elements
+   * to free up horizontal space:
+   *   - eyebrow + context: brand context drops out
+   *   - profile-copy: name/role drops out (avatar remains)
+   *   - profile chevron: no more dropdown hint
+   *   - search icon: moved to a menu item (currently hidden)
+   *   - header divider: no more separation needed
+   *
+   * Result: menu icon | [spacer] | bell + avatar. Minimal,
+   * clean, fully functional.
+   *
+   * ⚠️ Note: `.header-eyebrow` and `.header-context` are both
+   * hidden, leaving `.header-heading` with no visible children.
+   * The empty div still takes flex space (via `min-width: 0`),
+   * but visually it's invisible. Could `display: none` the
+   * whole `.header-heading` for cleaner DOM, but that's
+   * cosmetic.
+   */
+  .header-eyebrow,
+  .header-context,
+  .profile-copy,
+  .profile-button > svg,
+  .header-search,
+  .header-divider {
+    display: none;
+  }
+
+  .profile-button {
+    padding: 2px;
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .app-content {
+    min-height: calc(100vh - 66px - 80px);
+    padding: 23px 16px;
+  }
+
+  .app-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+    padding: 15px 16px;
+  }
+}
+
+/* =========================================================
+   EXTRA SMALL SCREENS
+   ========================================================= */
+
+@media (max-width: 380px) {
+  .app-header {
+    padding-inline: 10px;
+  }
+
+  .header-left,
+  .header-actions {
+    gap: 4px;
+  }
+
+  .app-content {
+    padding-inline: 12px;
+  }
+
+  .app-sidebar {
+    width: 88vw;
+  }
+}
+
+/* =========================================================
+   ACCESSIBILITY: REDUCED MOTION
+   ========================================================= */
+
+/**
+ * Disable animations and transitions for users with vestibular
+ * disorders (WCAG 2.3.3).
+ *
+ * ✅ This rule is correct and comprehensive — it overrides the
+ * global reduced-motion rule by targeting the specific
+ * properties (animation, transition) on the specific selectors
+ * used in this file. `!important` is required because the
+ * component-level transitions are declared with the same
+ * specificity — without `!important`, the media query wouldn't
+ * win.
+ *
+ * Note the rule correctly includes BOTH the animated elements
+ * (`.app-sidebar`, `.app-content`) AND the transient overlay —
+ * all motion in this file is covered.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .app-sidebar,
+  .nav-link,
+  .nav-link > svg,
+  .icon-button,
+  .profile-button,
+  .app-content {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .sidebar-overlay {
+    animation: none !important;
+  }
+}
+
+
+/* =========================================
+   Sidebar Footer and Logout Button
+   File: src/styles/layout.css
+   ========================================= */
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 16px 12px;
+  border-top: 1px solid var(--sidebar-border, #334155);
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  color: var(--sidebar-text, #e2e8f0);
+  min-width: 0;
+}
+
+.sidebar-footer-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(148, 163, 184, 0.14);
+  color: #cbd5e1;
+}
+
+.sidebar-footer > div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.sidebar-footer strong {
+  font-size: 0.875rem;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.sidebar-footer span {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+/* Logout button */
+.sidebar-logout {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 12px;
+  padding: 0 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+
+  border: 1px solid transparent;
+  border-radius: 8px;
+
+  background: transparent;
+  color: #cbd5e1;
+
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 550;
+  text-align: left;
+
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease;
+}
+
+.sidebar-logout:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+}
+
+.sidebar-logout:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 3px;
+}
+
+.sidebar-logout:active {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.sidebar-logout:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.sidebar-logout svg {
+  flex-shrink: 0;
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-logout {
+    transition: none;
+  }
+}

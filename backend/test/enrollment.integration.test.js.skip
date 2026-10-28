@@ -1,0 +1,290 @@
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const mongoose = require("mongoose");
+
+const Student = require("../src/models/Student");
+const Course = require("../src/models/Course");
+const Enrollment = require("../src/models/Enrollment");
+
+const {
+  createEnrollment,
+  cancelEnrollment,
+} = require("../src/services/enrollmentService");
+
+// Points at a test database (never the dev/prod DB). The suite is
+// skipped entirely if this is unset — so `npm test` in CI without a
+// test DB configured passes without failing. Set it to a replica-set
+// URI (e.g., a local `mongod --replSet` or Atlas free tier) because
+// `createEnrollment` uses transactions.
+const databaseUrl = process.env.MONGODB_TEST_URI;
+
+test(
+  "enrollment business rules and concurrent capacity",
+  // `skip` keeps the suite out of the default run when no test DB is
+  // configured. Requires a real replica set — transactions on a
+  // standalone mongod throw "Transaction numbers are only allowed
+  // on a replica set member or mongos".
+  { skip: !databaseUrl },
+  async (t) => {
+    await mongoose.connect(databaseUrl);
+
+    let students = [];
+    let course;
+    let createdEnrollments = [];
+
+    // Shared term values — used in the course AND in every
+    // createEnrollment call. Extracting them makes the "same term"
+    // precondition obvious and prevents drift between fixtures.
+    const academicYear = "2026/2027";
+    const semester = "Test Semester";
+
+    try {
+      // ── Ensure indexes exist BEFORE the concurrency test ──
+      // `Model.init()` waits for the schema's indexes to finish
+      // building. Without this, the partial unique index
+      // `unique_active_enrollment` might not be ready when the
+      // concurrent requests fire — and the DB-level guarantee
+      // would silently not apply, letting the test pass for the
+      // wrong reason.
+      await Promise.all([Student.init(), Course.init(), Enrollment.init()]);
+
+      // Unique suffix for student IDs and emails so parallel test
+      // runs (or repeated runs) don't collide on the unique indexes.
+      const suffix = `${Date.now()}-${process.pid}`;
+
+      // ✅ FIXED: `studentId` (not `studentNumber`) — matches the
+      // merged Student model. Also note `status: "active"` is
+      // required by the deactivation guard that now runs in
+      // studentService.changeStudentStatus.
+      students = await Student.create(
+        [0, 1, 2].map((index) => ({
+          studentId: `T-${suffix}-${index}`,
+          firstName: `Test${index}`,
+          lastName: "Student",
+          email: `test-${suffix}-${index}@example.com`,
+          department: "Computer Science",
+          program: "BSc Computer Science",
+          yearLevel: 1,
+          status: "active",
+        })),
+      );
+
+      // Small capacity (2) + 3 students = exactly one request will
+      // fail with COURSE_CAPACITY_REACHED. Deterministic setup is
+      // what makes the concurrency test's assertion reliable.
+      // `enrolledCount: 0` is set explicitly — it's the model
+      // default, but setting it makes the test's precondition
+      // self-documenting.
+      course = await Course.create({
+        courseCode: `T${Date.now()}`,
+        title: "Enrollment Integration Test",
+        description: "Temporary test course",
+        department: "Computer Science",
+        credits: 3,
+        instructor: null,
+        semester,
+        academicYear,
+        capacity: 2,
+        enrolledCount: 0,
+        status: "active",
+      });
+
+      // ── Test 1: the atomic capacity guard ───────────────────
+      // Fires 3 simultaneous enrollment requests against capacity=2.
+      // The atomic `$inc`/`$expr` in `createEnrollment` must allow
+      // exactly 2 to succeed — not "usually 2" or "sometimes 2".
+      // A regression to the old check-then-write pattern would
+      // let all 3 through (or a random subset) under concurrency.
+      await t.test("concurrent requests cannot exceed capacity", async () => {
+        // Promise.allSettled (not all) so one rejection doesn't abort
+        // the whole batch — we need to inspect successes AND failures.
+        // ✅ FIXED: `academicYear` and `semester` now passed —
+        // required by the Enrollment model.
+        const results = await Promise.allSettled(
+          students.map((student) =>
+            createEnrollment({
+              student: student._id.toString(),
+              course: course._id.toString(),
+              academicYear,
+              semester,
+            }),
+          ),
+        );
+
+        const successful = results.filter(
+          (result) => result.status === "fulfilled",
+        );
+
+        const failed = results.filter((result) => result.status === "rejected");
+
+        // Exactly 2 succeeded, exactly 1 failed. If 3 succeed → the
+        // capacity guard has a race. If 2 fail → something else is
+        // broken (validator or service regression).
+        assert.equal(successful.length, 2);
+        assert.equal(failed.length, 1);
+
+        createdEnrollments = successful.map((result) => result.value);
+
+        // The stored counter must equal the number of enrollments
+        // that actually landed. Drift here means the atomic
+        // seat-reservation (`$inc: { enrolledCount: 1 }`) committed
+        // a different number of times than `Enrollment.create` — a
+        // sign that the transaction is not actually rolling back
+        // on failure.
+        const updatedCourse = await Course.findById(course._id);
+        assert.equal(updatedCourse.enrolledCount, 2);
+
+        // Double-check via the enrollment collection directly —
+        // catches the "counter says 2 but DB has 3" scenario that
+        // an `enrolledCount`-only assertion would miss.
+        const activeCount = await Enrollment.countDocuments({
+          course: course._id,
+          status: "enrolled",
+        });
+
+        assert.equal(activeCount, 2);
+      });
+
+      // ── Test 2: partial unique index enforcement ────────────
+      // Same student, same course, same term → the app-level
+      // duplicate check AND the DB partial unique index both
+      // reject. Asserts the specific error code so a different
+      // failure (e.g., a transaction error, a validation error)
+      // wouldn't be mistaken for success.
+      await t.test("duplicate active enrollment is rejected", async () => {
+        const studentId = createdEnrollments[0].student;
+
+        // ✅ FIXED: term fields included — makes this a genuine
+        // duplicate rather than a validation failure masquerading
+        // as one.
+        await assert.rejects(
+          createEnrollment({
+            student: studentId.toString(),
+            course: course._id.toString(),
+            academicYear,
+            semester,
+          }),
+          (error) => error.code === "DUPLICATE_ACTIVE_ENROLLMENT",
+        );
+
+        // The failed insert must NOT have incremented the counter.
+        // If it did, the transaction isn't rolling back the `$inc`
+        // when `Enrollment.create` throws — a critical failure mode.
+        const updatedCourse = await Course.findById(course._id);
+        assert.equal(updatedCourse.enrolledCount, 2);
+      });
+
+      // ── Test 3: cancellation lifecycle ─────────────────────
+      // Cancelling an enrollment must:
+      //   1. Set status to "cancelled" (NOT delete the record)
+      //   2. Stamp cancelledAt + cancellationReason (audit trail)
+      //   3. Decrement Course.enrolledCount atomically
+      // All three happen inside the transaction in `cancelEnrollment`.
+      await t.test(
+        "cancellation preserves history and releases capacity",
+        async () => {
+          const enrollment = createdEnrollments[0];
+
+          const cancelled = await cancelEnrollment(
+            enrollment._id.toString(),
+            null, // actorId — null = system
+            "Integration test cancellation", // reason
+          );
+
+          assert.equal(cancelled.status, "cancelled");
+          assert.ok(cancelled.cancelledAt); // timestamp was set
+          assert.equal(
+            cancelled.cancellationReason,
+            "Integration test cancellation",
+          );
+
+          // Seat was released.
+          const updatedCourse = await Course.findById(course._id);
+          assert.equal(updatedCourse.enrolledCount, 1);
+
+          // Record still exists — cancellation is a state
+          // transition, not a delete. Asserts "preserves history".
+          const storedRecord = await Enrollment.findById(enrollment._id);
+          assert.ok(storedRecord);
+          assert.equal(storedRecord.status, "cancelled");
+        },
+      );
+
+      // ── Test 4: idempotency guard ──────────────────────────
+      // Re-cancelling returns 409 ENROLLMENT_ALREADY_CANCELLED
+      // rather than silently succeeding. This protects the audit
+      // trail (re-cancelling would overwrite the original
+      // cancelledAt / cancelledBy / reason with new values).
+      await t.test("repeated cancellation is rejected", async () => {
+        const enrollment = createdEnrollments[0];
+
+        await assert.rejects(
+          cancelEnrollment(enrollment._id.toString()),
+          (error) => error.code === "ENROLLMENT_ALREADY_CANCELLED",
+        );
+
+        // Counter unchanged — the failed cancel must not decrement
+        // a second time. Transaction-rollback assertion from the
+        // opposite direction of test 2.
+        const updatedCourse = await Course.findById(course._id);
+        assert.equal(updatedCourse.enrolledCount, 1);
+      });
+
+      // ── Test 5: re-enrollment after cancellation ───────────
+      // THE key behavior the partial unique index enables: a
+      // cancelled record does NOT block a new active enrollment
+      // for the same student/course/term. Without
+      // `partialFilterExpression: { status: "enrolled" }` on the
+      // unique index, this would throw E11000 at `Enrollment.create`.
+      await t.test("a cancelled student can re-enroll", async () => {
+        const oldEnrollment = createdEnrollments[0];
+
+        // ✅ FIXED: term fields included — must match the original
+        // enrollment's term exactly for the partial unique index
+        // to see this as a valid new active record.
+        const newEnrollment = await createEnrollment({
+          student: oldEnrollment.student.toString(),
+          course: course._id.toString(),
+          academicYear,
+          semester,
+        });
+
+        assert.equal(newEnrollment.status, "enrolled");
+
+        // The original record still exists and is still cancelled —
+        // re-enrollment creates a NEW document, it does not revive
+        // the old one.
+        const previousRecord = await Enrollment.findById(oldEnrollment._id);
+
+        assert.equal(previousRecord.status, "cancelled");
+
+        // Counter back to 2: 1 from the original non-cancelled
+        // enrollment (test 1's second success) + 1 from this new
+        // re-enrollment.
+        const updatedCourse = await Course.findById(course._id);
+        assert.equal(updatedCourse.enrolledCount, 2);
+      });
+    } finally {
+      // ── Cleanup — order matters ────────────────────────────
+      // Enrollments reference both Student and Course, so delete
+      // them first. Leaving orphan enrollments between runs would
+      // make subsequent runs fail with confusing duplicate-key
+      // errors.
+      if (course) {
+        await Enrollment.deleteMany({ course: course._id });
+        await Course.deleteOne({ _id: course._id });
+      }
+
+      if (students.length > 0) {
+        await Student.deleteMany({
+          _id: { $in: students.map((student) => student._id) },
+        });
+      }
+
+      // `disconnect` in `finally` guarantees the process exits even
+      // if an assertion fails — otherwise Node hangs on the open
+      // Mongoose socket and CI never sees the failure.
+      await mongoose.disconnect();
+    }
+  },
+);

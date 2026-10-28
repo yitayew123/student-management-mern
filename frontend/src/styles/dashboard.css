@@ -1,0 +1,428 @@
+/* Page heading */
+.dashboard-page,
+.placeholder-page {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.page-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.page-heading h1,
+.placeholder-page h1 {
+  margin: 5px 0 8px;
+}
+
+.page-heading p,
+.placeholder-page > p {
+  max-width: 650px;
+  margin-bottom: 0;
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+.page-kicker {
+  color: var(--color-brand-600);
+  font-size: 0.69rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+/* Metric cards */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.metric-card {
+  min-width: 0;
+  padding: 23px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 180ms ease, transform 180ms ease;
+}
+
+/* ✅ CHANGED: box-shadow hover stays unconditional (shadows aren't
+   motion), but the transform is now scoped to `no-preference`. Global
+   reduced-motion sets transition-duration to 0.01ms — so users who
+   request reduction would still see the card "jump" up 2px instantly.
+   This override removes the jump entirely for those users. */
+.metric-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .metric-card:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.metric-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.metric-icon {
+  display: grid;
+  place-items: center;
+  width: 49px;
+  height: 49px;
+  border-radius: 15px;
+}
+
+/* One-off decorative tones — intentionally not tokenized. These are
+   visual accents for the 3 metric icons (blue/violet/teal), tuned
+   specifically for this card treatment. Reusing brand tokens would
+   make all three icons the same color — losing the visual rhythm.
+   If a 4th card family is added, promote these to accent tokens. */
+.metric-icon--blue {
+  color: #2563eb;
+  background: #eff6ff;
+}
+
+.metric-icon--violet {
+  color: #7c3aed;
+  background: #f5f3ff;
+}
+
+.metric-icon--teal {
+  color: #0f766e;
+  background: #f0fdfa;
+}
+
+.metric-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 8px;
+  /* ✅ CHANGED: hardcoded hexes → tokens (identical values). */
+  color: var(--color-text-secondary);
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  font-size: 0.68rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.metric-value {
+  margin-top: 24px;
+  font-size: clamp(1.9rem, 3vw, 2.4rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.055em;
+  font-variant-numeric: tabular-nums;
+}
+
+.metric-card h2 {
+  margin: 9px 0 5px;
+  font-size: 0.96rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* ⚠️ Direct-child selector — assumes `<p>` is a direct child of
+   `.metric-card`. If the JSX ever wraps the paragraph in a div
+   (e.g., for animation), this rule silently stops matching and
+   the paragraph loses its muted color/margin reset. Currently
+   correct — noted for future reference. */
+.metric-card > p {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+/* Main content surfaces */
+.content-card {
+  min-width: 0;
+  /* ⚠️ TRADE-OFF: `overflow: hidden` clips the rounded corners of
+     child elements (first/last table rows, header). Necessary for
+     visual polish. The trade-off: any child focus ring (outline or
+     box-shadow) that extends beyond the card edge gets clipped.
+     Currently no focusable element in a `.content-card` has a ring
+     that reaches the edge — so this is fine. If a child button
+     ever appears at the card boundary, its ring may be truncated. */
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.content-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px;
+}
+
+.content-card-header h2 {
+  margin-bottom: 6px;
+  font-size: 1.03rem;
+}
+
+.content-card-header p {
+  margin: 0;
+  font-size: 0.81rem;
+}
+
+.record-count {
+  padding: 6px 10px;
+  color: var(--color-text-secondary);
+  /* ✅ CHANGED: #f8fafc → token (identical value). */
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  font-size: 0.73rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Recent activity table */
+.table-person {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 160px;
+}
+
+.table-avatar {
+  display: grid;
+  place-items: center;
+  width: 37px;
+  height: 37px;
+  flex-shrink: 0;
+  /* ✅ CHANGED: #1d4ed8 → --color-brand-700 (identical value);
+     #dbeafe → --color-brand-100 (identical value). */
+  color: var(--color-brand-700);
+  background: var(--color-brand-100);
+  border-radius: 11px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.table-person > div,
+.table-course {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.table-person strong,
+.table-course strong {
+  color: var(--color-text);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.table-person small,
+.table-course small {
+  color: var(--color-text-secondary);
+  font-size: 0.74rem;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  width: fit-content;
+  padding: 5px 9px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  font-size: 0.73rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  background: currentColor;
+  border-radius: 50%;
+}
+
+/* Status badge colors — using design tokens for the semantic colors,
+   keeping the specific border shades hardcoded (they're 200-level
+   shades specific to badge styling — no matching token exists and
+   creating one per status would clutter tokens.css). */
+
+.status-badge--enrolled,
+.status-badge--active {
+  color: var(--color-success);
+  background: var(--color-success-bg);
+  border-color: #bbf7d0;
+}
+
+.status-badge--cancelled,
+.status-badge--inactive {
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
+  border-color: #fecaca;
+}
+
+.status-badge--completed {
+  color: var(--color-info);
+  background: var(--color-info-bg);
+  border-color: #bfdbfe;
+}
+
+/* ⚠️ `#92400e` (amber-800) is intentionally darker than
+   `--color-warning: #b45309` (amber-700) — badge text needs more
+   contrast against the pale `--color-warning-bg`. Using the token
+   would make the badge too light. Leave hardcoded. */
+.status-badge--dropped,
+.status-badge--withdrawn {
+  color: #92400e;
+  background: var(--color-warning-bg);
+  border-color: #fde68a;
+}
+
+/* Neutral fallback for unknown status — slate-600 on slate-100.
+   No matching tokens for this specific neutral pairing; the closest
+   would be `--color-text-secondary` (#64748b, too light) and
+   `--color-surface-muted` (#f8fafc, too pale). Leave hardcoded. */
+.status-badge--unknown {
+  color: #475569;
+  background: #f1f5f9;
+  border-color: var(--color-border);
+}
+
+.dashboard-error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.dashboard-note {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--color-text-secondary);
+  font-size: 0.77rem;
+}
+
+/* "Live" indicator dot — emerald-500 has no matching token; it's a
+   purpose-built "healthy/live" color that doesn't fit the status
+   badge palette. Hardcoded is correct. */
+.dashboard-note-dot {
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+}
+
+/* Placeholder and not-found pages */
+.placeholder-card {
+  margin-top: 12px;
+}
+
+.not-found-page {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  /* ⚠️ `70vh` on mobile includes browser chrome (address bar). The
+     visible portion is smaller than 70% of the viewport at times.
+     Not urgent — page still centers acceptably. `70dvh` is the
+     modern fix; leave as-is unless the 404 looks off on a real
+     phone. */
+  min-height: 70vh;
+  padding: 30px;
+  text-align: center;
+}
+
+.not-found-code {
+  color: var(--color-brand-600);
+  font-size: clamp(4rem, 12vw, 7rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.08em;
+}
+
+.not-found-page h1 {
+  margin: 20px 0 8px;
+}
+
+.not-found-page p {
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1000px) {
+  .metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Orphan 3rd card spans both columns at tablet — standard pattern. */
+  .metric-card:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 650px) {
+  .dashboard-page,
+  .placeholder-page {
+    gap: 20px;
+  }
+
+  .page-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  /* ⚠️ Direct-child selector — assumes the button is a direct child
+     of `.page-heading`. Currently true in DashboardPage.jsx. If
+     wrapped in a `<div>`, this would stop matching. */
+  .page-heading > .ui-button {
+    align-self: flex-start;
+  }
+
+  .metrics-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  /* Reset the tablet span — single column at mobile. */
+  .metric-card:last-child {
+    grid-column: auto;
+  }
+
+  .metric-card {
+    padding: 19px;
+  }
+
+  .metric-value {
+    margin-top: 17px;
+  }
+
+  .content-card-header {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 18px;
+  }
+
+  /* Force table to scroll horizontally below 650px — squishing 5
+     columns into 375px would make them unreadable. The
+     `.table-wrapper { overflow-x: auto }` from components.css
+     provides the scroll container. */
+  .table-wrapper .data-table {
+    min-width: 720px;
+  }
+
+  /* Allow the record count to wrap instead of forcing horizontal
+     overflow in the narrow column layout. */
+  .record-count {
+    white-space: normal;
+  }
+}

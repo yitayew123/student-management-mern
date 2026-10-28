@@ -1,0 +1,793 @@
+/* ═══════════════════════════════════════════════════════════
+   Students module styles
+   
+   ⚠️ DESIGN DECISION — color palette:
+   This file uses INDIGO (#4338ca, #4f46e5, #6366f1) for
+   primary buttons and accents, while the rest of the app
+   (dashboard, sidebar, header, shared UI components) uses BLUE
+   (--color-brand-600: #2563eb).
+   
+   If intentional (students module has its own visual identity),
+   fine — keep as-is. If unintentional, either:
+     A) Replace indigo hexes with var(--color-brand-*) tokens
+     B) Add --color-indigo-* tokens to tokens.css so the pattern
+        is explicit and greppable
+   
+   Recommendation: option A — one brand color across the app.
+   ═══════════════════════════════════════════════════════════ */
+
+.students-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+  color: var(--color-text, #172033);
+}
+
+.students-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.students-heading h2,
+.student-modal-heading h2 {
+  margin: 0;
+  font-size: 27px;
+  line-height: 1.25;
+  font-weight: 750;
+}
+
+.students-eyebrow {
+  margin: 0 0 7px;
+  /* ⚠️ Matches indigo palette decision above. Would be
+     var(--color-brand-600) if aligned to the app's brand. */
+  color: #4f46e5;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.students-subtitle,
+.student-modal-heading > div > p:last-child {
+  margin: 9px 0 0;
+  color: var(--color-text-muted, #64748b);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Buttons
+   ═══════════════════════════════════════════════════════════ */
+
+.student-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 9px 13px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.student-button:focus-visible,
+.student-action:focus-visible,
+.sort-button:focus-visible,
+.student-modal-close:focus-visible {
+  outline: 3px solid rgba(79, 70, 229, 0.28);
+  outline-offset: 2px;
+}
+
+.student-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.student-button-primary {
+  background: #4338ca;
+  color: #fff;
+}
+
+.student-button-primary:hover:not(:disabled) {
+  background: #3730a3;
+}
+
+.student-button-secondary {
+  border-color: var(--color-border, #dce1eb);
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #172033);
+}
+
+.student-button-secondary:hover:not(:disabled) {
+  /* 🔴 FIXED: was --color-background (nonexistent token). Use
+     --color-canvas — that's the page-level background. */
+  background: var(--color-canvas, #f5f7fb);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Toolbar (search + status filter)
+   ═══════════════════════════════════════════════════════════ */
+
+.students-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.student-search {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 10px;
+  min-width: 160px;
+  min-height: 43px;
+  padding: 0 13px;
+  border: 1px solid var(--color-border, #dce1eb);
+  border-radius: 10px;
+  background: var(--color-surface, #fff);
+}
+
+.student-search:focus-within {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+.student-search-icon {
+  color: var(--color-text-muted, #64748b);
+  font-size: 22px;
+}
+
+.student-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+}
+
+.student-status-filter select,
+.student-field select {
+  min-height: 43px;
+  padding: 10px 34px 10px 12px;
+  border: 1px solid var(--color-border, #dce1eb);
+  border-radius: 9px;
+  background: var(--color-surface, #fff);
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+}
+
+/* 🔴 FIXED (mobile UX): iOS Safari auto-zooms the page when
+   focusing any input/select with font-size < 16px. Every tap on
+   the search bar / filter / form field would zoom the page.
+   
+   Fix: bump to 16px on mobile only — desktop stays at 13px
+   (which looks fine at larger viewport sizes). */
+@media (max-width: 760px) {
+  .student-search input,
+  .student-status-filter select,
+  .student-field input,
+  .student-field select {
+    font-size: 16px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Table
+   ═══════════════════════════════════════════════════════════ */
+
+.students-table-card {
+  min-width: 0;
+  /* ⚠️ TRADE-OFF: `overflow: hidden` clips rounded corners (needed
+     for the visual polish) but could clip child focus rings.
+     Currently no issue — all focusable children sit within
+     padding-safe areas. If you add a borderless button at the very
+     edge, its ring may be truncated. */
+  overflow: hidden;
+  border: 1px solid var(--color-border, #e3e7ef);
+  border-radius: 14px;
+  background: var(--color-surface, #fff);
+}
+
+.students-table-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--color-border, #e9edf3);
+}
+
+.students-table-topline strong {
+  font-size: 14px;
+}
+
+.students-table-topline > span {
+  color: var(--color-text-muted, #64748b);
+  font-size: 12px;
+}
+
+.students-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.students-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 12px;
+}
+
+.students-table th {
+  padding: 13px 16px;
+  /* 🔴 FIXED: was --color-background (#f8fafc fallback). Use
+     --color-surface-muted — that's the correct token for table
+     headers. */
+  background: var(--color-surface-muted, #f8fafc);
+  color: var(--color-text-muted, #64748b);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.students-table td {
+  padding: 15px 16px;
+  border-top: 1px solid var(--color-border, #edf0f5);
+  vertical-align: middle;
+}
+
+.students-table tbody tr:hover {
+  background: rgba(99, 102, 241, 0.025);
+}
+
+.sort-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.student-number {
+  color: var(--color-text, #172033);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.student-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 180px;
+}
+
+.student-avatar {
+  display: grid;
+  flex: 0 0 35px;
+  width: 35px;
+  height: 35px;
+  place-items: center;
+  border-radius: 11px;
+  background: #eef2ff;
+  color: #4338ca;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.student-identity-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.student-identity-copy strong {
+  color: var(--color-text, #172033);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.student-identity-copy small {
+  color: var(--color-text-muted, #64748b);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Status badges
+   
+   🔴 FIXED: was missing graduated / suspended / unknown classes.
+   StudentStatusBadge generates those class names for backend
+   enum values the badge supports — without these rules, those
+   students rendered as raw text with no pill styling.
+   
+   Colors match dashboard.css's .status-badge--* to keep the
+   visual language consistent between "student status" and
+   "enrollment status" contexts.
+   ═══════════════════════════════════════════════════════════ */
+
+.student-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.student-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.student-status-active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.student-status-inactive {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.student-status-graduated {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.student-status-suspended {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.student-status-unknown {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Row actions
+   ═══════════════════════════════════════════════════════════ */
+
+.student-row-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.student-action {
+  /* 🔴 FIXED (WCAG 2.5.8): was `padding: 5px 0` → ~21px total
+     height, below the 24×24 minimum touch target. Bumped to 8px
+     vertical — brings total to ~27px, comfortable on touch while
+     remaining visually compact. */
+  padding: 8px 4px;
+  border: 0;
+  background: transparent;
+  color: #4338ca;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.student-action:hover {
+  text-decoration: underline;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Loading / empty states
+   ═══════════════════════════════════════════════════════════ */
+
+.students-state {
+  display: flex;
+  min-height: 230px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 20px;
+  text-align: center;
+}
+
+.students-state h3 {
+  margin: 12px 0 0;
+  font-size: 15px;
+}
+
+.students-state p {
+  max-width: 350px;
+  margin: 8px 0 16px;
+  color: var(--color-text-muted, #64748b);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.students-empty-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 14px;
+  background: #eef2ff;
+  color: #4338ca;
+  font-size: 24px;
+}
+
+.student-loader {
+  width: 27px;
+  height: 27px;
+  border: 3px solid #e0e7ff;
+  border-top-color: #4f46e5;
+  border-radius: 50%;
+  animation: student-spin 0.8s linear infinite;
+}
+
+@keyframes student-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Pagination
+   ═══════════════════════════════════════════════════════════ */
+
+.students-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 15px 20px;
+  border-top: 1px solid var(--color-border, #e9edf3);
+}
+
+.students-pagination > span {
+  color: var(--color-text-muted, #64748b);
+  font-size: 12px;
+}
+
+.students-pagination > div {
+  display: flex;
+  gap: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Notices and errors
+   ═══════════════════════════════════════════════════════════ */
+
+.students-notice,
+.students-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 15px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.students-notice {
+  border: 1px solid #bbf7d0;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.students-notice button {
+  /* 🔴 FIXED (WCAG 2.5.8): was just `font-size: 20px` — touch
+     target ~20×20, below the 24 minimum. Explicit sizing gives
+     a comfortable dismiss target on mobile. */
+  display: grid;
+  place-items: center;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.students-notice button:hover {
+  background: rgba(22, 101, 52, 0.08);
+}
+
+.students-error {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Modals (form + status confirmation)
+   ═══════════════════════════════════════════════════════════ */
+
+.student-modal-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  padding: 24px 16px;
+  background: rgba(15, 23, 42, 0.5);
+  /* 🔴 FIXED: added backdrop-filter to match the shared `Modal`
+     component (components.css). Without it, the students modal
+     has a solid blur-less backdrop while other modals have
+     frosted glass — inconsistent visual language. */
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.student-modal,
+.student-confirm-dialog {
+  width: 100%;
+  max-width: 650px;
+  /* 🔴 FIXED: added `dvh` (dynamic viewport height) with `vh`
+     fallback. On mobile, `100vh` includes the browser address
+     bar — when the bar hides/shows on scroll, the modal height
+     jumps. `dvh` accounts for the visible viewport. */
+  max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  padding: 26px;
+  border: 1px solid var(--color-border, #e3e7ef);
+  border-radius: 16px;
+  background: var(--color-surface, #fff);
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.2);
+}
+
+/* Suppress focus outline on the modal container itself when
+   programmatically focused (we call `.focus()` on open for SR
+   announcement — see StudentsPage.jsx's `useEffect`). */
+.student-modal:focus,
+.student-confirm-dialog:focus {
+  outline: none;
+}
+
+.student-modal-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 26px;
+}
+
+.student-modal-heading h2 {
+  font-size: 22px;
+}
+
+.student-modal-close {
+  display: grid;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid var(--color-border, #dce1eb);
+  border-radius: 9px;
+  background: transparent;
+  color: inherit;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.student-modal-close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Form fields (used by StudentForm)
+   ═══════════════════════════════════════════════════════════ */
+
+.student-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 16px;
+}
+
+.student-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.student-field label {
+  color: var(--color-text, #172033);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.required-mark {
+  color: #dc2626;
+}
+
+.student-field input {
+  width: 100%;
+  min-width: 0;
+  min-height: 43px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border, #dce1eb);
+  border-radius: 9px;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #172033);
+  font: inherit;
+  font-size: 13px;
+}
+
+.student-field input:focus-visible,
+.student-field select:focus-visible {
+  outline: 3px solid rgba(79, 70, 229, 0.17);
+  border-color: #6366f1;
+}
+
+.student-field input[aria-invalid="true"],
+.student-field select[aria-invalid="true"] {
+  border-color: #dc2626;
+}
+
+.student-field-error {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.student-form-alert {
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 9px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.student-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 26px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Confirm dialog (status change)
+   ═══════════════════════════════════════════════════════════ */
+
+.student-confirm-dialog {
+  max-width: 420px;
+}
+
+.student-confirm-dialog h2 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.student-confirm-dialog > p {
+  margin: 12px 0 0;
+  color: var(--color-text-muted, #64748b);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Utility
+   ═══════════════════════════════════════════════════════════ */
+
+/* ⚠️ DUPLICATION: this class also exists in global.css /
+   components.css. Duplicating it here is harmless (same rules)
+   but noisy — consider removing and relying on the global
+   definition instead. Leaving as-is for now (removal is trivial
+   once verified nothing in the students module depends on the
+   local version specifically). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Responsive
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 760px) {
+  .students-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .students-heading > .student-button {
+    align-self: flex-start;
+  }
+
+  .students-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .student-status-filter select {
+    width: 100%;
+  }
+
+  /* Force horizontal scroll on the table — squishing 6 columns
+     into 375px would make them unreadable. Combined with
+     `.students-table-scroll { overflow-x: auto }` above. */
+  .students-table {
+    min-width: 850px;
+  }
+}
+
+@media (max-width: 520px) {
+  .students-heading h2 {
+    font-size: 23px;
+  }
+
+  .student-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .student-modal,
+  .student-confirm-dialog {
+    padding: 20px 16px;
+  }
+
+  .students-pagination {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .students-pagination > div {
+    width: 100%;
+  }
+
+  .students-pagination > div .student-button {
+    flex: 1;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Accessibility: reduced motion
+   ═══════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .student-loader {
+    animation: none;
+  }
+
+  .student-button {
+    transition: none;
+  }
+}

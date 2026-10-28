@@ -1,0 +1,272 @@
+/**
+ * Global stylesheet — reset + baseline styles for the whole app.
+ *
+ * Load order:
+ *   1. Font import (Google Fonts) — see ⚠️ note below
+ *   2. Tokens (--color-*, --space-*, etc.) — must come before any
+ *      rule that uses them, so tokens.css is imported here rather
+ *      than being a separate <link> in the HTML
+ *   3. Everything else (resets, element defaults, utilities)
+ *
+ * ⚠️ PERFORMANCE: `@import url(google-fonts)` in CSS creates a
+ * render-blocking waterfall:
+ *   1. Browser fetches this CSS file
+ *   2. Parses it, finds the font @import
+ *   3. Fetches the Google Fonts CSS
+ *   4. Parses that, finds the actual .woff2 URL
+ *   5. Fetches the font file
+ * Every step delays first paint. The fix is to move the font
+ * request to `index.html` with preconnect hints:
+ *
+ *   <link rel="preconnect" href="https://fonts.googleapis.com">
+ *   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ *   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+ *
+ * Then delete the font `@import` line below. That single change
+ * typically saves 200–500ms of first-paint time on cold load.
+ * Not a bug — but worth doing before shipping.
+ */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+/* Local tokens — --color-*, --space-*, --radius-*, etc. */
+@import "./tokens.css";
+
+/**
+ * Universal box-sizing reset.
+ *
+ * ⚠️ FIXED: original was `* { box-sizing: border-box; }` — that
+ * does NOT include `::before` and `::after`, which are pseudo-
+ * elements and are NOT matched by the `*` selector. Any pseudo-
+ * element with padding/border would silently use `content-box`,
+ * causing the classic "why is my ::before 2px wider than the
+ * parent?" bug. Including both pseudo-elements closes that gap
+ * and is the standard reset.
+ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/**
+ * Root element.
+ *   min-width: 320px      → app never collapses below 320px (widest
+ *                            small-phone width); prevents horizontal
+ *                            squish on browsers that resize below
+ *                            that on split-screen / open devtools
+ *   scroll-behavior:      → smooth anchor-link scrolling
+ *   text-size-adjust:     → prevents iOS Safari from auto-enlarging
+ *                            text when the device rotates to
+ *                            landscape; without it, body text can
+ *                            jump 2-3px on rotation
+ */
+html {
+  min-width: 320px;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+/**
+ * Default body typography + canvas background.
+ *
+ * `-webkit-font-smoothing: antialiased` + `-moz-osx-font-smoothing:
+ * grayscale` pair together — the webkit rule only applies in
+ * Chromium/Safari; without the Firefox equivalent, Inter renders
+ * heavier on macOS Firefox than on Chrome. Minor visual polish.
+ */
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-canvas);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/**
+ * Form controls inherit the page font.
+ * Without this, inputs/selects/buttons would use the browser's
+ * default 13.33px system font, creating a visual break.
+ */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+/* Buttons are clickable by default — signals interactivity. */
+button {
+  cursor: pointer;
+}
+
+/* Disabled buttons: not-allowed cursor + reduced opacity for the
+   "can't be pressed" visual state. */
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/**
+ * Link reset — inherit color, remove underline.
+ *
+ * ⚠️ ACCESSIBILITY NOTE: removing underline from ALL links makes
+ * body-text links indistinguishable from surrounding text (WCAG
+ * 1.4.1 — "use of color"). This is fine for NAV links (sidebar,
+ * buttons styled as links) but problematic for inline prose
+ * links.
+ *
+ * If your app has article/help/FAQ pages, consider:
+ *   .prose a { text-decoration: underline; }
+ *   .prose a:hover { text-decoration-thickness: 2px; }
+ * Or apply `text-decoration: underline` to all links by default
+ * and only override for nav.
+ *
+ * Current behavior is preserved — this is a decision, not a fix.
+ */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Images and SVGs are block by default — avoids the inline
+   baseline gap (extra ~4px below images from the "descender"
+   space in inline layout). */
+img,
+svg {
+  display: block;
+}
+
+/* Reset top margin on headings + paragraphs. Bottom margin is
+   preserved (browser default) — the "no gap above, gap below"
+   pattern that keeps content tight under a section header. */
+h1,
+h2,
+h3,
+h4,
+p {
+  margin-top: 0;
+}
+
+/* Headings: tight leading + negative tracking for visual weight.
+   `-0.025em` is the industry-standard heading-tightening value
+   (matches Tailwind's `tracking-tight`). */
+h1,
+h2,
+h3,
+h4 {
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+}
+
+/* H1 uses fluid sizing — grows with viewport between 1.65rem
+   and 2rem. Note: on mobile (<880px) the min (1.65rem) wins,
+   so h1 is effectively fixed at 26.4px until tablet. That's a
+   valid choice for a "large hero heading on mobile" look; if
+   you'd prefer smaller h1 on phones, lower the min to ~1.25rem. */
+h1 {
+  font-size: clamp(1.65rem, 3vw, 2rem);
+}
+
+/* H2 fixed at 1.25rem (20px). H3/H4 fall through to browser
+   defaults (~18.7px / 16px). If you want explicit control, add
+   `h3 { font-size: var(--font-size-lg); }` and
+   `h4 { font-size: var(--font-size-base); }`. */
+h2 {
+  font-size: var(--font-size-xl);
+}
+
+/**
+ * ⚠️ DESIGN DECISION: all paragraphs render in secondary text
+ * color (`#64748b`), not primary. This de-emphasizes every <p>,
+ * which is correct if all your paragraphs are helper/meta text
+ * (subtitles under form fields, table descriptions). It's
+ * NOT correct if any paragraph contains prose users read for
+ * information — those should be primary color for readability.
+ *
+ * Contrast check: #64748b on #f5f7fb = ~4.77:1 → passes WCAG
+ * AA for normal text. So this isn't an accessibility
+ * violation, but a readability one.
+ *
+ * If body-content paragraphs exist, remove this rule and rely
+ * on the body color (--color-text). Add an explicit
+ * `.text-muted` / `.text-secondary` utility for the helper case.
+ */
+p {
+  color: var(--color-text-secondary);
+}
+
+/**
+ * Focus styling for keyboard users.
+ *
+ * ⚠️ Double ring: `outline` + `box-shadow` — both fire on
+ * :focus-visible. This is often intentional ("bright outline
+ * plus soft glow"), but it's redundant given tokens.css already
+ * defines --focus-ring. If you want a single ring, drop one:
+ *   - Keep only outline → sharper, box-shadow follows radius
+ *   - Keep only box-shadow → softer, no browser default
+ * Most design systems keep the outline for contrast safety and
+ * drop the shadow. Either works; current version works too.
+ *
+ * `outline-offset: 3px` pushes the ring away from the element
+ * so it doesn't hug borders.
+ */
+:focus-visible {
+  outline: 2px solid var(--color-brand-600);
+  outline-offset: 3px;
+  box-shadow: var(--focus-ring);
+}
+
+/* Text selection — brand blue background, white text. */
+::selection {
+  color: #ffffff;
+  background: var(--color-brand-600);
+}
+
+/* React root — fills viewport so the app background covers the
+   whole screen even before content loads. Could use `100dvh`
+   instead of `100vh` for correct sizing on mobile (dynamic
+   viewport height); `100vh` has a known "jumps when mobile
+   browser address bar hides" issue. */
+#root {
+  min-height: 100vh;
+}
+
+/* Screen-reader-only content. Standard visually-hidden utility —
+   removes element visually without `display:none` (which would
+   hide from screen readers too). Legacy `clip: rect(0,0,0,0)`
+   is universally supported; modern alternative is
+   `clip-path: inset(50%)`. Both work. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Respect user's reduced-motion preference — kill animations and
+   smooth scrolling for users with vestibular disorders. `!important`
+   is required here because it overrides component-level
+   animations that might otherwise take precedence.
+   
+   `0.01ms` (not `0s`) is deliberate — some browsers treat `0s`
+   as "no animation specified" and fall back to defaults. Tiny
+   non-zero duration forces the animation state to complete
+   instantly. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

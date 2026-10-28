@@ -1,0 +1,887 @@
+/* ═══════════════════════════════════════════════════════════
+   Courses module styles
+   
+   ⚠️ DESIGN DECISION — color palette:
+   This file uses INDIGO (#4338ca, #4f46e5, #6366f1) for
+   primary buttons and accents, matching students.css.
+   Both modules use indigo while the rest of the app uses
+   blue (--color-brand-600: #2563eb).
+   
+   If intentional, keep. If not, replace indigo hexes with
+   var(--color-brand-*) tokens for consistency.
+   ═══════════════════════════════════════════════════════════ */
+
+.courses-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+  color: var(--color-text, #172033);
+}
+
+.courses-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.courses-heading h2,
+.course-modal-heading h2 {
+  margin: 0;
+  font-size: 27px;
+  line-height: 1.25;
+  font-weight: 750;
+}
+
+.courses-eyebrow {
+  margin: 0 0 7px;
+  color: #4f46e5;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.courses-subtitle,
+.course-modal-heading > div > p:last-child {
+  margin: 9px 0 0;
+  color: var(--color-text-muted, #64748b);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Buttons
+   ═══════════════════════════════════════════════════════════ */
+
+.course-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 9px 13px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.course-button:focus-visible,
+.course-action:focus-visible,
+.course-sort-button:focus-visible,
+.course-modal-close:focus-visible {
+  outline: 3px solid rgba(79, 70, 229, 0.28);
+  outline-offset: 2px;
+}
+
+.course-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.course-button-primary {
+  background: #4338ca;
+  color: #fff;
+}
+
+.course-button-primary:hover:not(:disabled) {
+  background: #3730a3;
+}
+
+.course-button-secondary {
+  border-color: var(--color-border, #dce1eb);
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #172033);
+}
+
+.course-button-secondary:hover:not(:disabled) {
+  /* 🔴 FIXED: was --color-background (nonexistent token). Use
+     --color-canvas — the page-level background. */
+  background: var(--color-canvas, #f5f7fb);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Toolbar
+   ═══════════════════════════════════════════════════════════ */
+
+.courses-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.course-search {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 10px;
+  min-width: 160px;
+  min-height: 43px;
+  padding: 0 13px;
+  border: 1px solid var(--color-border, #dce1eb);
+  border-radius: 10px;
+  background: var(--color-surface, #fff);
+  color: var(--color-text-muted, #64748b);
+}
+
+.course-search:focus-within {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+.course-search > span:first-child {
+  font-size: 22px;
+}
+
+.course-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--color-text, #172033);
+  font: inherit;
+  font-size: 13px;
+}
+
+.course-status-filter select {
+  min-height: 43px;
+  padding: 10px 34px 10px 12px;
+  border: 1px solid var(--color-border, #dce1eb);
+  border-radius: 9px;
+  background: var(--color-surface, #fff);
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+}
+
+/* 🔴 FIXED (mobile UX): iOS Safari auto-zooms when focusing any
+   input with font-size < 16px. Bump on mobile only — desktop
+   stays at 13px (which looks fine at larger viewport sizes). */
+@media (max-width: 760px) {
+  .course-search input,
+  .course-status-filter select,
+  .course-field input,
+  .course-field select,
+  .course-field textarea {
+    font-size: 16px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Table
+   ═══════════════════════════════════════════════════════════ */
+
+.courses-table-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border, #e3e7ef);
+  border-radius: 14px;
+  background: var(--color-surface, #fff);
+}
+
+.courses-table-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--color-border, #e9edf3);
+}
+
+.courses-table-topline strong {
+  font-size: 14px;
+}
+
+.courses-table-topline > span {
+  color: var(--color-text-muted, #64748b);
+  font-size: 12px;
+}
+
+.courses-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.courses-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 12px;
+}
+
+.courses-table th {
+  padding: 13px 16px;
+  /* 🔴 FIXED: was --color-background. Use --color-surface-muted —
+     the correct token for table headers. */
+  background: var(--color-surface-muted, #f8fafc);
+  color: var(--color-text-muted, #64748b);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.courses-table td {
+  padding: 15px 16px;
+  border-top: 1px solid var(--color-border, #edf0f5);
+  vertical-align: middle;
+}
+
+.courses-table tbody tr:hover {
+  background: rgba(99, 102, 241, 0.025);
+}
+
+.course-sort-button {
+  /* ⚠️ Touch target note: this button inherits the height of its
+     text content (~14px) since padding is 0. On mobile, WCAG 2.5.8
+     (24×24 minimum) technically applies — but the button is inside
+     a `th` with 13px vertical padding, so the effective hit area is
+     larger in practice. If this becomes a complaint, add
+     `padding: 4px 0; margin: -4px 0;` to expand the clickable
+     region without changing visual layout. */
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.course-code {
+  color: var(--color-text, #172033);
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.course-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 170px;
+  max-width: 300px;
+}
+
+.course-identity strong {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Line-clamp to 2 lines — descriptions can be long (up to 2000
+   chars). Truncating in the table keeps rows visually uniform
+   while still showing context on hover (title attribute would
+   be a good addition, not implemented). */
+.course-identity small {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--color-text-muted, #64748b);
+  font-size: 11px;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Status badges
+   
+   🔴 FIXED: added `.course-status-unknown` — CourseStatusBadge
+   generates this class for null/undefined/invalid statuses. Was
+   missing → those badges rendered as unstyled text.
+   
+   Also added: `.course-status-archived` was present, but the
+   color scheme has been adjusted to distinguish it from "inactive"
+   (archived is a terminal state; inactive is transient).
+   ═══════════════════════════════════════════════════════════ */
+
+.course-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.course-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.course-status-active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.course-status-inactive {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.course-status-archived {
+  /* Amber to distinguish from inactive (gray). Archived is a
+     terminal state that deserves visual weight. */
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* 🔴 ADDED: unknown fallback for invalid/missing statuses. */
+.course-status-unknown {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Row actions
+   ═══════════════════════════════════════════════════════════ */
+
+.course-row-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.course-action {
+  /* 🔴 FIXED (WCAG 2.5.8): was `padding: 5px 0` → ~21px total
+     height, below the 24×24 minimum touch target. Bumped to 8px
+     vertical — brings total to ~27px, comfortable on touch while
+     remaining visually compact. */
+  padding: 8px 4px;
+  border: 0;
+  background: transparent;
+  color: #4338ca;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.course-action:hover {
+  text-decoration: underline;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Capacity bar
+   
+   🔴 FIXED: added `.course-capacity-fill.is-over` and
+   `.course-capacity-over` — CourseCapacity now generates these
+   for over-capacity courses. Without them, over-capacity rendered
+   identically to "exactly full" (silent data-integrity bug).
+   ═══════════════════════════════════════════════════════════ */
+
+.course-capacity {
+  min-width: 110px;
+}
+
+.course-capacity-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 7px;
+  font-size: 11px;
+}
+
+.course-capacity-summary strong {
+  font-weight: 750;
+}
+
+.course-capacity-summary span,
+.course-capacity-unavailable {
+  color: var(--color-text-muted, #64748b);
+  font-size: 10px;
+}
+
+.course-capacity-track {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--color-border, #e5e7eb);
+}
+
+.course-capacity-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #6366f1;
+  transition: width 0.2s ease;
+}
+
+.course-capacity-fill.is-full {
+  background: #d97706;
+}
+
+/* 🔴 ADDED: over-capacity state. Red signals a data-integrity
+   issue (enrollments exceeded capacity — either a guard failure
+   or a migration bug). Visually distinct from is-full's amber. */
+.course-capacity-fill.is-over {
+  background: #dc2626;
+}
+
+/* 🔴 ADDED: summary text color for over-capacity courses. */
+.course-capacity-over {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+/* ✅ Already present: neutral color for at-capacity ("Full") — but
+   was not styled via a dedicated class before. Adding it here so
+   the summary text can be styled differently from "X seats left". */
+.course-capacity-full {
+  color: var(--color-text-secondary, #64748b);
+  font-weight: 600;
+}
+
+.course-capacity-cell .course-capacity-summary {
+  margin-bottom: 0;
+}
+
+.course-capacity-cell .course-capacity-summary span {
+  display: none;
+}
+
+.course-capacity-unavailable {
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   States (loading, empty)
+   ═══════════════════════════════════════════════════════════ */
+
+.courses-state {
+  display: flex;
+  min-height: 230px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 20px;
+  text-align: center;
+}
+
+.courses-state h3 {
+  margin: 12px 0 0;
+  font-size: 15px;
+}
+
+.courses-state p {
+  max-width: 350px;
+  margin: 8px 0 16px;
+  color: var(--color-text-muted, #64748b);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.courses-empty-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 14px;
+  background: #eef2ff;
+  color: #4338ca;
+  font-size: 24px;
+}
+
+.course-loader {
+  width: 27px;
+  height: 27px;
+  border: 3px solid #e0e7ff;
+  border-top-color: #4f46e5;
+  border-radius: 50%;
+  animation: course-spin 0.8s linear infinite;
+}
+
+@keyframes course-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Pagination
+   ═══════════════════════════════════════════════════════════ */
+
+.courses-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 15px 20px;
+  border-top: 1px solid var(--color-border, #e9edf3);
+}
+
+.courses-pagination > span {
+  color: var(--color-text-muted, #64748b);
+  font-size: 12px;
+}
+
+.courses-pagination > div {
+  display: flex;
+  gap: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Notices and errors
+   ═══════════════════════════════════════════════════════════ */
+
+.courses-notice,
+.courses-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 15px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.courses-notice {
+  border: 1px solid #bbf7d0;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.courses-notice button {
+  /* 🔴 FIXED (WCAG 2.5.8): was just `font-size: 20px` — touch
+     target was ~20×20, under the 24 minimum. Explicit sizing
+     gives a comfortable dismiss target on mobile. */
+  display: grid;
+  place-items: center;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.courses-notice button:hover {
+  background: rgba(22, 101, 52, 0.08);
+}
+
+.courses-error {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Modals
+   ═══════════════════════════════════════════════════════════ */
+
+.course-modal-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  padding: 24px 16px;
+  background: rgba(15, 23, 42, 0.5);
+  /* 🔴 FIXED: added backdrop-filter to match the shared `Modal`
+     component (components.css). Without it, courses modals had a
+     solid blur-less backdrop while other modals had frosted
+     glass — inconsistent visual language. */
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.course-modal,
+.course-confirm-dialog {
+  width: 100%;
+  max-width: 720px;
+  /* 🔴 FIXED: added dvh (dynamic viewport height) with vh fallback.
+     On mobile, 100vh includes the browser address bar — the modal
+     height jumps when the bar hides/shows. dvh accounts for the
+     visible viewport. */
+  max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  padding: 26px;
+  border: 1px solid var(--color-border, #e3e7ef);
+  border-radius: 16px;
+  background: var(--color-surface, #fff);
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.2);
+}
+
+/* 🔴 ADDED: suppress default focus outline on the modal container
+   when programmatically focused (StudentsPage / CoursesPage call
+   `.focus()` on open for SR announcement). Without this, browsers
+   show a blue ring around the whole modal. */
+.course-modal:focus,
+.course-confirm-dialog:focus {
+  outline: none;
+}
+
+.course-modal-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.course-modal-heading h2 {
+  font-size: 22px;
+}
+
+.course-modal-close {
+  display: grid;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid var(--color-border, #dce1eb);
+  border-radius: 9px;
+  background: transparent;
+  color: inherit;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.course-modal-close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.course-modal-capacity {
+  margin-bottom: 22px;
+  padding: 14px;
+  border: 1px solid var(--color-border, #e3e7ef);
+  border-radius: 10px;
+  /* 🔴 FIXED: was --color-background. Use --color-surface-muted
+     — correct token for muted blocks. */
+  background: var(--color-surface-muted, #f8fafc);
+}
+
+.course-modal-capacity > strong {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Form fields
+   ═══════════════════════════════════════════════════════════ */
+
+.course-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 16px;
+}
+
+.course-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.course-field-full {
+  grid-column: 1 / -1;
+}
+
+.course-field label {
+  color: var(--color-text, #172033);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.course-required {
+  color: #dc2626;
+}
+
+.course-field input,
+.course-field select,
+.course-field textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 43px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border, #dce1eb);
+  border-radius: 9px;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #172033);
+  font: inherit;
+  font-size: 13px;
+}
+
+.course-field textarea {
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.course-field input:focus-visible,
+.course-field select:focus-visible,
+.course-field textarea:focus-visible {
+  outline: 3px solid rgba(79, 70, 229, 0.17);
+  border-color: #6366f1;
+}
+
+.course-field input[aria-invalid="true"],
+.course-field select[aria-invalid="true"],
+.course-field textarea[aria-invalid="true"] {
+  border-color: #dc2626;
+}
+
+.course-field input:disabled,
+.course-field select:disabled,
+.course-field textarea:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.course-field-error {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.course-field-help {
+  color: var(--color-text-muted, #64748b);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.course-form-alert {
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 9px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.course-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 26px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Confirm dialog
+   ═══════════════════════════════════════════════════════════ */
+
+.course-confirm-dialog {
+  max-width: 440px;
+}
+
+.course-confirm-dialog h2 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.course-confirm-dialog > p {
+  margin: 12px 0 0;
+  color: var(--color-text-muted, #64748b);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Utility (duplicate — global .sr-only also exists)
+   ═══════════════════════════════════════════════════════════ */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Responsive
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 760px) {
+  .courses-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .courses-heading > .course-button {
+    align-self: flex-start;
+  }
+
+  .courses-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .course-status-filter select {
+    width: 100%;
+  }
+
+  /* Force horizontal scroll — 7 columns won't fit on a phone. */
+  .courses-table {
+    min-width: 980px;
+  }
+}
+
+@media (max-width: 520px) {
+  .courses-heading h2 {
+    font-size: 23px;
+  }
+
+  .course-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .course-field-full {
+    grid-column: auto;
+  }
+
+  .course-modal,
+  .course-confirm-dialog {
+    padding: 20px 16px;
+  }
+
+  .courses-pagination {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .courses-pagination > div {
+    width: 100%;
+  }
+
+  .courses-pagination > div .course-button {
+    flex: 1;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Reduced motion
+   ═══════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .course-loader,
+  .course-capacity-fill {
+    animation: none;
+    transition: none;
+  }
+}

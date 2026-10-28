@@ -1,0 +1,111 @@
+# ═══════════════════════════════════════════════════════════
+# Student Management System — root .gitignore
+# Covers both backend/ and frontend/ subprojects.
+# ═══════════════════════════════════════════════════════════
+
+# ── Dependencies ────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ── Environment files (secrets — NEVER commit) ─────────────
+# Commit .env.example instead, with placeholder values.
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# ── Build output ────────────────────────────────────────────
+dist/
+build/
+out/
+.next/
+.nuxt/
+.cache/
+.parcel-cache/
+
+# ── Logs ────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ── Runtime / process files ─────────────────────────────────
+pids
+*.pid
+*.seed
+*.pid.lock
+*.tgz
+
+# ── Coverage / test output ──────────────────────────────────
+coverage/
+.nyc_output/
+.nyc_output
+*.lcov
+
+# ── Testing tools ───────────────────────────────────────────
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Cypress
+cypress/screenshots/
+cypress/videos/
+cypress/downloads/
+
+# Jest / Vitest
+.jest-cache/
+.vitest/
+
+# ── Vite / build caches ─────────────────────────────────────
+.vite/
+.cache-loader/
+
+# ── Node misc ───────────────────────────────────────────────
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
+.node_repl_history
+.node_repl
+.grunt
+
+# ── Editors / IDEs ──────────────────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ── OS files ────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# ── MongoDB local data (if using a local dbPath in-repo) ────
+data/db/
+mongo-data/
+
+# ── Backups (from `mongodump` scripts) ──────────────────────
+backups/
+*.backup
+
+# ── Temporary / scratch files ───────────────────────────────
+tmp/
+temp/
+*.tmp
+
+# ── Postman (optional — some teams commit these) ────────────
+# Uncomment to ignore Postman local workspace state:
+# postman/.postman/

@@ -1,0 +1,185 @@
+/**
+ * Design tokens — single source of truth for the app's visual language.
+ *
+ * Every page/component should reference these variables instead of
+ * hardcoded colors, spacing, and radii. Benefits:
+ *   - Change once, propagate everywhere (rebrand = swap one value)
+ *   - Design consistency (no more "three slightly different grays")
+ *   - Accessibility audits (contrast checks against named tokens)
+ *   - Dark mode / theme swapping later, without touching components
+ *
+ * Naming convention: `--<category>-<variant>[-<state>]`
+ *   e.g. --color-brand-600, --space-4, --radius-lg, --shadow-md
+ *
+ * Value units:
+ *   - Spacing, radii, font sizes use rem (scales with the root font
+ *     size — respects user accessibility preferences)
+ *   - Colors use hex or `rgb(r g b / alpha)` — modern CSS syntax
+ *     (space-separated, slash-alpha) works in all evergreen browsers
+ */
+
+:root {
+  /* ═══════════════════════════════════════════════════════════
+     BRAND PALETTE
+     Blue family — primary actions, links, focus states, active
+     nav highlights. 50/100 for subtle backgrounds (hover, badges);
+     500/600/700 for interactive elements in increasing emphasis.
+     Matches Tailwind's `blue` scale — safe for contrast on white
+     at 500+, AA-compliant at 600+ for text.
+     ═══════════════════════════════════════════════════════════ */
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-500: #3b82f6;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4ed8;
+
+  /* ═══════════════════════════════════════════════════════════
+     SURFACES
+     Layer hierarchy for the app shell:
+       canvas         → page background (behind everything)
+       surface        → cards, tables, forms (the default "white")
+       surface-muted  → table-row stripes, disabled regions
+       sidebar        → dark navigation rail (contrast by design)
+       sidebar-hover  → row highlight on hover
+     The sidebar uses a near-black intentional palette — it's the
+     one place a dark surface is expected even in light mode.
+     ═══════════════════════════════════════════════════════════ */
+  --color-canvas: #f5f7fb;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f8fafc;
+  --color-sidebar: #111827;
+  --color-sidebar-hover: #1f2937;
+
+  /* ═══════════════════════════════════════════════════════════
+     TEXT
+     Four-level hierarchy (from highest to lowest contrast):
+       text           → default body text
+       text-secondary → labels, helper text, meta
+       text-muted     → timestamps, disabled, placeholders
+       text-inverse   → on dark surfaces (sidebar, dark buttons)
+     Each successive level is lower-contrast; UI should only go
+     deeper when the content is genuinely less important. Do not
+     use `text-muted` for anything a user needs to read.
+     ═══════════════════════════════════════════════════════════ */
+  --color-text: #172033;
+  --color-text-secondary: #64748b;
+  --color-text-muted: #94a3b8;
+  --color-text-inverse: #f8fafc;
+
+  /* ═══════════════════════════════════════════════════════════
+     BORDERS
+     `border`        → default dividers, input outlines
+     `border-strong` → emphasized dividers, hover/focus outlines
+     Both are subdued enough to disappear visually while still
+     defining spatial separation. Never use pure gray (#ccc) —
+     these are tuned to harmonize with the canvas tint.
+     ═══════════════════════════════════════════════════════════ */
+  --color-border: #e2e8f0;
+  --color-border-strong: #cbd5e1;
+
+  /* ═══════════════════════════════════════════════════════════
+     STATUS COLORS
+     Each state has TWO tokens:
+       --color-<state>       → foreground (text, icon, border)
+       --color-<state>-bg    → background tint (badge, alert box)
+     The pairs are WCAG-AA compliant when used together — the
+     fg was chosen specifically to contrast against the bg.
+     Don't mix them (e.g. success fg on info bg) — that pairing
+     wasn't contrast-checked.
+     ═══════════════════════════════════════════════════════════ */
+  --color-success: #15803d;
+  --color-success-bg: #f0fdf4;
+  --color-warning: #b45309;
+  --color-warning-bg: #fffbeb;
+  --color-danger: #b91c1c;
+  --color-danger-bg: #fef2f2;
+  --color-info: #1d4ed8;
+  --color-info-bg: #eff6ff;
+
+  /* ═══════════════════════════════════════════════════════════
+     TYPOGRAPHY
+     One font family, one scale (7 sizes). The fallback chain is
+     generous — covers macOS, Windows, Linux, and mobile. If
+     `Inter` isn't loaded (or the user has blocklists), the system
+     font takes over seamlessly.
+     The scale ratio is ~1.125 (major second) — modest, dense
+     enough for data-heavy tables without feeling cramped.
+     ═══════════════════════════════════════════════════════════ */
+  --font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-size-xs: 0.75rem; /*  12px */
+  --font-size-sm: 0.875rem; /* 14px */
+  --font-size-base: 1rem; /* 16px */
+  --font-size-lg: 1.125rem; /* 18px */
+  --font-size-xl: 1.25rem; /* 20px */
+  --font-size-2xl: 1.5rem; /* 24px */
+  --font-size-3xl: 1.875rem; /* 30px */
+
+  /* ═══════════════════════════════════════════════════════════
+     SPACING SCALE
+     4px base — every value is a multiple of 4 (0.25rem).
+     Gaps in the sequence are intentional:
+       space-7  (1.75rem) skipped  → rarely needed
+       space-9  (2.25rem) skipped  → rarely needed
+       space-11 (2.75rem) skipped  → rarely needed
+     If you need one of these, prefer adding up existing tokens
+     (space-6 + space-1 = 1.75rem) or use `calc()` at the call
+     site rather than extending this file — keeps the scale tight.
+     ═══════════════════════════════════════════════════════════ */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  /* ═══════════════════════════════════════════════════════════
+     SHAPE AND ELEVATION
+     Radii: 4 tiers + pill.
+       sm   → inputs, small tags
+       md   → buttons, cards
+       lg   → modals, large panels
+       xl   → hero sections, oversized cards
+       pill → chips, avatar rings, toggle tracks
+     Shadows: 3 levels, all using a subtle blue-gray tint
+     (rgb(15 23 42 / …) ≈ slate-900) instead of pure black —
+     matches the palette's warmth and looks less "dirty" on
+     tinted backgrounds. Each successive level increases both
+     blur and opacity to signal elevation.
+     ═══════════════════════════════════════════════════════════ */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.125rem;
+  --radius-pill: 999px;
+
+  --shadow-sm: 0 1px 2px rgb(15 23 42 / 0.05);
+  --shadow-md: 0 4px 14px rgb(15 23 42 / 0.06);
+  --shadow-lg: 0 16px 40px rgb(15 23 42 / 0.12);
+
+  /* ═══════════════════════════════════════════════════════════
+     LAYOUT DIMENSIONS
+     Fixed structural measurements. Kept as tokens (rather than
+     hardcoded in layout CSS) so the responsive breakpoints,
+     sticky-header offsets, and scroll containers all reference
+     the same value — no drift when the sidebar width changes.
+     ═══════════════════════════════════════════════════════════ */
+  --sidebar-width: 260px;
+  --header-height: 76px;
+  --content-max-width: 1600px;
+
+  /* ═══════════════════════════════════════════════════════════
+     FOCUS RING
+     Applied to interactive elements on :focus-visible. Uses a
+     translucent brand blue at 25% alpha — subtle enough not to
+     distract sighted mouse users (but :focus-visible already
+     handles that), strong enough to satisfy WCAG 2.4.7 (Focus
+     Visible). Preserves the element's existing border-radius
+     because box-shadow (not outline) follows the element's
+     shape.
+     ═══════════════════════════════════════════════════════════ */
+  --focus-ring: 0 0 0 3px rgb(59 130 246 / 0.25);
+}

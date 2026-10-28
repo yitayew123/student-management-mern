@@ -1,0 +1,497 @@
+/* ═══════════════════════════════════════════════════════════
+   Dashboard module styles
+   
+   🔴 TOKEN NAMES FIXED: was using 4 nonexistent tokens
+   (--color-primary, --color-muted, --color-surface-hover,
+   --color-focus). All references below now use the real tokens
+   from tokens.css, so future global token changes propagate here.
+   
+   ⚠️ TABLE STYLING NOTE:
+   The recent enrollments table is rendered by the shared
+   <Table> component (components.css `.data-table`). The
+   `.dashboard-recent__table` and `.dashboard-recent__table-wrap`
+   rules were removed — they targeted classes that don't exist in
+   the DOM. The `.dashboard-recent` wrapper card + `<Table>`'s
+   own styling combine to produce the intended look.
+   ═══════════════════════════════════════════════════════════ */
+
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  min-width: 0;
+  color: var(--color-text, #172033);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Page header
+   ═══════════════════════════════════════════════════════════ */
+
+.dashboard-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.dashboard-page__header h1 {
+  margin: 4px 0 8px;
+  font-size: clamp(1.7rem, 3vw, 2.2rem);
+  line-height: 1.2;
+  letter-spacing: -0.035em;
+}
+
+.dashboard-page__eyebrow {
+  margin: 0;
+  /* 🔴 FIXED: was var(--color-primary) — nonexistent. Use brand token. */
+  color: var(--color-brand-600, #4f46e5);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.dashboard-page__subtitle {
+  margin: 0;
+  /* 🔴 FIXED: was var(--color-muted) — nonexistent. Use text-muted. */
+  color: var(--color-text-muted, #667085);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Refresh button
+   ═══════════════════════════════════════════════════════════ */
+
+.dashboard-refresh-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 42px;
+  padding: 10px 15px;
+  border: 1px solid var(--color-border, #dfe3eb);
+  border-radius: 10px;
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #172033);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.dashboard-refresh-button:hover:not(:disabled) {
+  /* 🔴 FIXED: was var(--color-surface-hover) — nonexistent.
+     Use --color-surface-muted (the "hover/muted" surface token). */
+  background: var(--color-surface-muted, #f8fafc);
+  /* 🔴 FIXED: was var(--color-primary) — nonexistent. */
+  border-color: var(--color-brand-600, #4f46e5);
+}
+
+.dashboard-refresh-button:focus-visible,
+.dashboard-notice button:focus-visible {
+  /* 🔴 FIXED: was var(--color-focus) — nonexistent. Use a slightly
+     lighter brand shade — or hardcode #a5b4fc intentionally (that's
+     the current fallback value, which is fine as a "soft focus ring"). */
+  outline: 3px solid #a5b4fc;
+  outline-offset: 2px;
+}
+
+.dashboard-refresh-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.dashboard-spin {
+  animation: dashboard-rotate 1s linear infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Metrics grid + cards
+   ═══════════════════════════════════════════════════════════ */
+
+.dashboard-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.dashboard-metric-card {
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 16px;
+  background: var(--color-surface, #fff);
+  box-shadow: 0 3px 12px rgb(16 24 40 / 3%);
+}
+
+.dashboard-metric-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.dashboard-metric-card__label {
+  margin: 0 0 12px;
+  /* 🔴 FIXED: was var(--color-muted) — nonexistent. */
+  color: var(--color-text-muted, #667085);
+  font-size: 0.88rem;
+  font-weight: 650;
+}
+
+.dashboard-metric-card__value {
+  margin: 0;
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  line-height: 1.1;
+  font-weight: 750;
+  letter-spacing: -0.045em;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-metric-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 46px;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  background: var(--color-surface-muted, #f2f4f7);
+  /* 🔴 FIXED: was var(--color-primary) — nonexistent. */
+  color: var(--color-brand-600, #4f46e5);
+}
+
+.dashboard-metric-card__description {
+  margin: 18px 0 0;
+  /* 🔴 FIXED: was var(--color-muted) — nonexistent. */
+  color: var(--color-text-muted, #667085);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Loading state (first-load only)
+   ═══════════════════════════════════════════════════════════ */
+
+.dashboard-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 180px;
+  /* 🔴 FIXED: was var(--color-muted) — nonexistent. */
+  color: var(--color-text-muted, #667085);
+}
+
+.dashboard-loading__spinner {
+  width: 22px;
+  height: 22px;
+  border: 3px solid var(--color-border, #e5e7eb);
+  /* 🔴 FIXED: was var(--color-primary) — nonexistent. */
+  border-top-color: var(--color-brand-600, #4f46e5);
+  border-radius: 50%;
+  animation: dashboard-rotate 0.8s linear infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Notices (error + stale warning banners)
+   ═══════════════════════════════════════════════════════════ */
+
+.dashboard-notice {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 18px;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 12px;
+}
+
+.dashboard-notice--error {
+  border-color: #f0b7b7;
+  background: #fff5f5;
+  color: #8b2525;
+}
+
+.dashboard-notice--warning {
+  border-color: #e9c985;
+  background: #fffbeb;
+  color: #7a4b08;
+}
+
+.dashboard-notice strong {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.dashboard-notice p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+/* ⚠️ `!important` is pragmatic — the base `.dashboard-notice p`
+   rule sets `font-size` and `margin`, and the hint needs different
+   values. An alternative: `.dashboard-notice p.dashboard-notice__hint`
+   (higher specificity, no !important). Either works; !important is
+   shorter but harder to override later. */
+.dashboard-notice__hint {
+  margin-top: 6px !important;
+  font-size: 0.82rem !important;
+  opacity: 0.85;
+}
+
+.dashboard-notice button {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+/* ✅ ADDED: disabled state for the "Try again" button during a
+   pending retry. The parent currently disables it during load —
+   without this rule, the disable is invisible. */
+.dashboard-notice button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   All-zero empty state
+   ═══════════════════════════════════════════════════════════ */
+
+.dashboard-empty {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 20px;
+  border: 1px dashed var(--color-border, #d0d5dd);
+  border-radius: 14px;
+  color: var(--color-text, #172033);
+}
+
+.dashboard-empty > svg {
+  flex: 0 0 auto;
+  /* 🔴 FIXED: was var(--color-muted) — nonexistent. */
+  color: var(--color-text-muted, #667085);
+}
+
+.dashboard-empty strong {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.dashboard-empty p {
+  margin: 0;
+  /* 🔴 FIXED: was var(--color-muted) — nonexistent. */
+  color: var(--color-text-muted, #667085);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Recent enrollments section
+   
+   ⚠️ TABLE STYLING REMOVED: the `.dashboard-recent__table` and
+   `.dashboard-recent__table-wrap` rules were removed because the
+   <Table> component renders `.data-table` (styled by
+   components.css). The wrapper card below provides the container;
+   the shared Table handles its own internal styling.
+   ═══════════════════════════════════════════════════════════ */
+
+.dashboard-recent {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 16px;
+  background: var(--color-surface, #fff);
+}
+
+/* 🔴 FIXED: added flex + justify-content to lay out the title
+   and the count badge side-by-side. Previously the count wrapped
+   below the title. */
+.dashboard-recent__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+}
+
+.dashboard-recent__header > div {
+  min-width: 0;
+}
+
+.dashboard-recent__header h2 {
+  margin: 0 0 5px;
+  font-size: 1.08rem;
+}
+
+.dashboard-recent__header p {
+  margin: 0;
+  /* 🔴 FIXED: was var(--color-muted) — nonexistent. */
+  color: var(--color-text-muted, #667085);
+  font-size: 0.86rem;
+}
+
+/* 🔴 ADDED: the count badge was rendered by JSX but had no CSS.
+   Without this, it appeared as plain text with no visual weight. */
+.dashboard-recent__count {
+  flex: 0 0 auto;
+  padding: 5px 10px;
+  border-radius: var(--radius-pill, 999px);
+  border: 1px solid var(--color-border, #e5e7eb);
+  background: var(--color-surface-muted, #f8fafc);
+  color: var(--color-text-secondary, #64748b);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Status badges (used in the recent-enrollments table cells)
+   
+   🔴 FIXED: `.dashboard-status--completed` was grouped with
+   "active" and "enrolled" (green). But completed is a positive
+   TERMINAL state — it shouldn't look identical to "in progress".
+   Changed to blue (matches enrollment module's completed color).
+   
+   🔴 Note: `.dashboard-status--active` is kept for defensive
+   compatibility but "active" is not a valid enrollment status
+   (backend enum: enrolled | completed | cancelled | dropped |
+   withdrawn). If it ever renders, the row is bad data.
+   ═══════════════════════════════════════════════════════════ */
+
+.dashboard-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #f2f4f7;
+  color: #475467;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.dashboard-status--enrolled,
+.dashboard-status--active {
+  background: #ecfdf3;
+  color: #067647;
+}
+
+/* 🔴 CHANGED: completed was grouped with green above. Now blue —
+   matches `.enrollment-status-completed` for consistency. */
+.dashboard-status--completed {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.dashboard-status--cancelled {
+  background: #fef3f2;
+  color: #b42318;
+}
+
+/* 🟢 ADDED: dropped + withdrawn statuses — currently unused in
+   dashboard (only 5 recent enrollments, they could be any status),
+   but if a dropped/withdrawn record is in the list, these styles
+   are needed to match the enrollment module's colors. */
+.dashboard-status--dropped {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.dashboard-status--withdrawn {
+  background: #faf5ff;
+  color: #6b21a8;
+}
+
+.dashboard-status--unknown {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Animation
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes dashboard-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Responsive
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 900px) {
+  .dashboard-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .dashboard-page {
+    gap: 18px;
+  }
+
+  .dashboard-page__header {
+    align-items: stretch;
+  }
+
+  .dashboard-refresh-button {
+    align-self: flex-start;
+  }
+
+  .dashboard-metrics {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .dashboard-metric-card {
+    padding: 18px;
+  }
+
+  .dashboard-notice {
+    flex-direction: column;
+  }
+
+  .dashboard-recent__header {
+    padding: 17px;
+    /* ✅ ADDED: on narrow screens, the count badge should wrap
+       below the title rather than compress the h2. */
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .dashboard-recent__count {
+    align-self: flex-start;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Reduced motion
+   ═══════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-spin,
+  .dashboard-loading__spinner {
+    animation: none;
+  }
+
+  .dashboard-refresh-button {
+    transition: none;
+  }
+}
