@@ -1,15 +1,18 @@
 const mongoose = require("mongoose");
 const { env } = require("./env");
 
-// Connect to MongoDB using the validated connection string.
-// Disabling bufferCommands means queries fail fast if the DB is down,
-// instead of silently queuing for up to 10s (the selection timeout).
+/**
+ * Connect to the MongoDB database configured in the validated environment.
+ *
+ * Queries fail immediately when the database is unavailable instead of
+ * being queued while Mongoose waits for a connection.
+ */
 async function connectDB() {
   try {
     mongoose.set("bufferCommands", false);
 
     await mongoose.connect(env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 10000, // fail fast if DB unreachable
+      serverSelectionTimeoutMS: 10000,
     });
 
     console.log(`MongoDB connected successfully: ${mongoose.connection.name}`);
@@ -17,13 +20,15 @@ async function connectDB() {
     console.error("MongoDB connection failed.");
     console.error(`Reason: ${error.message}`);
 
-    // Re-throw so the caller (server bootstrap) can exit with a clear error.
+    // Let the server bootstrap or script decide how to handle startup failure.
     throw error;
   }
 }
 
-// Close the MongoDB connection cleanly.
-// No-op if already disconnected (readyState 0), so it's safe to call anytime.
+/**
+ * Close the MongoDB connection if one is currently open.
+ * Safe to call when already disconnected.
+ */
 async function disconnectDB() {
   if (mongoose.connection.readyState !== 0) {
     await mongoose.disconnect();
@@ -31,6 +36,7 @@ async function disconnectDB() {
   }
 }
 
+// Export the connection lifecycle functions for the server and scripts.
 module.exports = {
   connectDB,
   disconnectDB,
