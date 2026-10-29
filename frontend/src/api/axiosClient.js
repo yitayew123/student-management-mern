@@ -1,6 +1,6 @@
 import axios from "axios";
 
-// Shared client: use the configured API URL, with a local development default.
+/** Shared Axios client for requests to the backend API. */
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:5001/api",
   timeout: 15000,
@@ -10,7 +10,10 @@ const api = axios.create({
   },
 });
 
-// Keep this key in sync with AuthContext; localStorage tokens are exposed to injected scripts.
+/**
+ * Attach the saved access token to requests when a user is signed in.
+ * Keep the storage key in sync with AuthContext.
+ */
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("accessToken");
@@ -24,11 +27,14 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// Handle expired sessions globally and give callers a consistent error shape.
+/**
+ * Pass successful responses through and normalize failures for API callers.
+ * A 401 outside login clears the saved session and notifies AuthContext.
+ */
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // A login 401 means invalid credentials, not an expired session.
+    // Login 401s indicate invalid credentials, not an expired session.
     const isLoginRequest = error.config?.url
       ?.replace(/\/+$/, "")
       .endsWith("/auth/login");
@@ -43,7 +49,6 @@ api.interceptors.response.use(
     }
     const message = getApiErrorMessage(error);
 
-    // Preserve backend error metadata alongside a readable message.
     const payload = error.response?.data?.error ?? null;
 
     return Promise.reject(
@@ -58,7 +63,9 @@ api.interceptors.response.use(
   },
 );
 
-// Convert Axios failures into messages suitable for the UI.
+/**
+ * Return a user-friendly message for server, timeout, or network errors.
+ */
 export function getApiErrorMessage(error) {
   // Prefer a message from the server when a response is available.
   if (error.response) {
