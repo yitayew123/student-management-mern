@@ -1,31 +1,25 @@
-// ─────────────────────────────────────────────────────────────
-// Core middleware imports
-// ─────────────────────────────────────────────────────────────
-const express = require("express"); // web framework
-const cors = require("cors"); // CORS policy
-const helmet = require("helmet"); // security headers
-const rateLimit = require("express-rate-limit"); // per-IP throttle
+const express = require("express");
+const cors = require("cors");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 
-// ─────────────────────────────────────────────────────────────
+// Swagger configuration
+const { swaggerUi, swaggerDocument } = require("./config/swagger");
+
 // Config + utilities
-// ─────────────────────────────────────────────────────────────
-const { env } = require("./config/env"); // validated env vars
-const AppError = require("./utils/AppError"); // operational error class
+const { env } = require("./config/env");
+const AppError = require("./utils/AppError");
 
-// ─────────────────────────────────────────────────────────────
-// Route modules (each imported exactly once)
-// ─────────────────────────────────────────────────────────────
+// Route modules
 const healthRoutes = require("./routes/healthRoutes");
 const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const studentRoutes = require("./routes/studentRoutes");
 const courseRoutes = require("./routes/courseRoutes");
-const enrollmentRoutes = require("./routes/enrollmentRoutes"); // ← only one
+const enrollmentRoutes = require("./routes/enrollmentRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 
-// ─────────────────────────────────────────────────────────────
-// Tail middleware (mounted last)
-// ─────────────────────────────────────────────────────────────
+// Tail middleware
 const notFound = require("./middleware/notFound");
 const errorHandler = require("./middleware/errorHandler");
 
@@ -35,17 +29,17 @@ const app = express();
 // Global middleware
 // ─────────────────────────────────────────────────────────────
 
-// 1. Security headers on every response.
+// 1. Security headers
 app.use(helmet());
 
-// 2. CORS — only the configured frontend origin (plus no-origin
-//    requests like curl / server-to-server).
+// 2. CORS configuration
 app.use(
   cors({
     origin(origin, callback) {
       if (!origin || origin === env.CLIENT_ORIGIN) {
         return callback(null, true);
       }
+
       return callback(
         new AppError(
           "Origin is not allowed by CORS",
@@ -57,10 +51,10 @@ app.use(
   }),
 );
 
-// 3. JSON body parser (10 KB cap).
+// 3. JSON body parser (10 KB cap)
 app.use(express.json({ limit: "10kb" }));
 
-// 4. URL-encoded body parser (10 KB cap).
+// 4. URL-encoded body parser (10 KB cap)
 app.use(
   express.urlencoded({
     extended: false,
@@ -68,7 +62,7 @@ app.use(
   }),
 );
 
-// 5. Rate limiter — 100 requests / 15 min per IP.
+// 5. Rate limiter — 100 requests / 15 minutes per IP
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 100,
@@ -85,12 +79,13 @@ const apiLimiter = rateLimit({
   },
 });
 
-// 6. Apply rate limiter to all /api routes.
+// 6. Apply rate limiter to API routes
 app.use("/api", apiLimiter);
 
 // ─────────────────────────────────────────────────────────────
-// Route registrations (each mounted exactly once)
+// API route registrations
 // ─────────────────────────────────────────────────────────────
+
 app.use("/api/health", healthRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
@@ -100,13 +95,27 @@ app.use("/api/enrollments", enrollmentRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 
 // ─────────────────────────────────────────────────────────────
-// Tail middleware (must be last)
+// Swagger API documentation
+// Register before the 404 and error handlers.
 // ─────────────────────────────────────────────────────────────
 
-// Catch unmatched routes → forwards a 404 AppError.
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocument, {
+    customCssUrl: "",
+    customJs: [],
+  }),
+);
+
+// ─────────────────────────────────────────────────────────────
+// Tail middleware — must remain last
+// ─────────────────────────────────────────────────────────────
+
+// Catch unmatched routes and forward a 404 AppError.
 app.use(notFound);
 
-// Central error handler — formats all error responses.
+// Central error handler.
 app.use(errorHandler);
 
 module.exports = app;
